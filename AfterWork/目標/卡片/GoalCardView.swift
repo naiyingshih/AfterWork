@@ -28,11 +28,23 @@ struct GoalCardView: View {
                 }
             }
             
-            ProgressView(value: store.progress)
+            HStack(spacing: 8) {
+                ProgressView(value: store.progress)
+                Text("\(Int(round(store.progress * 100)))%")
+            }
+            
+            HStack {
+                Spacer()
+                if let date = store.targetDate {
+                    Text("預計完成日：\(DateFormatter.yyyyMMdd.string(from: date))")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
             
             if store.isExpanded {
                 
-                ForEach(store.items) { item in
+                ForEach(store.details) { item in
                     HStack {
                         Button(action: {
                             store.send(.itemChecked(id: item.id, !item.isDone))
@@ -48,7 +60,7 @@ struct GoalCardView: View {
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
-                            if let index = store.items.index(id: item.id) {
+                            if let index = store.details.index(id: item.id) {
                                 store.send(.deleteItem(IndexSet(integer: index)))
                             }
                         } label: {

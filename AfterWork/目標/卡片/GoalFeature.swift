@@ -11,19 +11,7 @@ import SwiftUI
 @Reducer
 struct GoalFeature {
     
-    @ObservableState
-    struct State: Equatable, Identifiable {
-        let id: UUID
-        var title: String
-        var items: IdentifiedArrayOf<GoalItem>
-        var isExpanded: Bool = false
-        
-        var progress: Double {
-            guard !items.isEmpty else { return 0 }
-            let done = items.filter { $0.isDone }.count
-            return Double(done) / Double(items.count)
-        }
-    }
+    typealias State = Goal
     
     enum Action {
         case toggleExpanded
@@ -43,17 +31,21 @@ struct GoalFeature {
                 return .none
                 
             case let .itemChecked(id, value):
-                state.items[id: id]?.isDone = value
+                state.details[id: id]?.isDone = value
+                state.updatedTime = Date()
                 return .none
                 
             case let .deleteItem(indexSet):
-                state.items.remove(atOffsets: indexSet)
+                state.details.remove(atOffsets: indexSet)
+                state.updatedTime = Date()
                 return .none
                 
             case .addItemButtonTapped:
                 return .none
                 
-            case .addToToday:
+            case let .addToToday(id):
+                state.details[id: id]?.isAddedToToday = true
+                state.updatedTime = Date()
                 return .none
             }
         }

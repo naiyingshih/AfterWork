@@ -12,24 +12,32 @@ extension GoalsFeature.State {
     
     static let mock = Self(
         goals: [
-            GoalFeature.State(
-                id: UUID(),
+            Goal(
+                id: UUID().uuidString,
                 title: "學會一首吉他曲",
-                items: [
-                    GoalItem(id: UUID(), title: "練前奏", isDone: true),
-                    GoalItem(id: UUID(), title: "練副歌", isDone: true),
-                    GoalItem(id: UUID(), title: "練 solo", isDone: false),
-                    GoalItem(id: UUID(), title: "錄完整影片", isDone: false)
-                ]
-            ),
-            
-            GoalFeature.State(
-                id: UUID(),
-                title: "進修 SwiftUI",
-                items: [
-                    GoalItem(id: UUID(), title: "看 WWDC", isDone: false),
-                    GoalItem(id: UUID(), title: "做一個 Demo", isDone: false)
-                ]
+                targetDate: Date().addingTimeInterval(86400 * 30),
+                details: [
+                    GoalItem(
+                        id: UUID().uuidString,
+                        title: "練前奏",
+                        isDone: true,
+                        isAddedToToday: false,
+                        order: 0,
+                        createdTime: Date(),
+                        updatedTime: Date()
+                    ),
+                    GoalItem(
+                        id: UUID().uuidString,
+                        title: "練副歌",
+                        isDone: false,
+                        isAddedToToday: false,
+                        order: 1,
+                        createdTime: Date(),
+                        updatedTime: Date()
+                    )
+                ],
+                createdTime: Date(),
+                updatedTime: Date()
             )
         ]
     )
@@ -40,26 +48,31 @@ struct GoalsFeature {
     
     @ObservableState
     struct State: Equatable {
-        var goals: IdentifiedArrayOf<GoalFeature.State> = []
+        var goals: IdentifiedArrayOf<Goal> = []
     }
     
     enum Action {
         case addGoalButtonTapped
-        case goal(id: UUID, action: GoalFeature.Action)
+        case goal(id: Goal.ID, action: GoalFeature.Action)
     }
     
     var body: some ReducerOf<Self> {
         
         Reduce { state, action in
             switch action {
+                
             case .addGoalButtonTapped:
                 return .none
-            case let .goal(id, childAction):
-                guard var childState = state.goals[id: id] else { return .none }
-                let effect = GoalFeature().reduce(into: &childState, action: childAction)
-                state.goals[id: id] = childState
-                return effect.map { GoalsFeature.Action.goal(id: id, action: $0) }
+                
+            case .goal:
+                return .none
             }
+        }
+        .forEach(
+            \.goals,
+            action: /Action.goal
+        ) {
+            GoalFeature()
         }
     }
 }
