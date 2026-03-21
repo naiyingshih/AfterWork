@@ -10,6 +10,8 @@ import ComposableArchitecture
 
 @main
 struct AfterWorkApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
     let store = Store(initialState: AppFeature.State()) {
         AppFeature()
     }
