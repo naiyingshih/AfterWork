@@ -64,6 +64,6 @@ struct GoalsView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: store.goalForm != nil)
+        .toolbar(store.goalForm != nil ? .hidden : .visible, for: .tabBar)
     }
 }

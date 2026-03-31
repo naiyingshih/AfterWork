@@ -46,8 +46,6 @@ struct GoalFeature {
                 
             case .toggleExpanded:
                 state.isExpanded.toggle()
-                // 將展開狀態存入本地端，不再消耗後端資源
-                UserDefaults.standard.set(state.isExpanded, forKey: "expanded-\(state.id)")
                 return .none
                 
             case let .itemChecked(id, value):

@@ -26,8 +26,6 @@ struct Goal: Equatable, Identifiable, Codable {
     var createdTime: Date
     /// 編輯時間
     var updatedTime: Date
-    /// 是否展開
-    var isExpanded: Bool = false
     
     init(
         id: String,
@@ -36,8 +34,7 @@ struct Goal: Equatable, Identifiable, Codable {
         targetDate: Date? = nil,
         details: IdentifiedArrayOf<GoalItem> = [],
         createdTime: Date,
-        updatedTime: Date,
-        isExpanded: Bool = false
+        updatedTime: Date
     ) {
         self.id = id
         self.title = title
@@ -46,7 +43,6 @@ struct Goal: Equatable, Identifiable, Codable {
         self.details = details
         self.createdTime = createdTime
         self.updatedTime = updatedTime
-        self.isExpanded = isExpanded
     }
     
     enum CodingKeys: String, CodingKey {
@@ -69,9 +65,6 @@ struct Goal: Equatable, Identifiable, Codable {
         self.details = IdentifiedArray(uniqueElements: detailsArray)
         self.createdTime = try container.decode(Date.self, forKey: .createdTime)
         self.updatedTime = try container.decode(Date.self, forKey: .updatedTime)
-        
-        // 畫面的展開狀態：從本地 UserDefaults 讀取（不在 Firebase 留下紀錄）
-        self.isExpanded = UserDefaults.standard.bool(forKey: "expanded-\(self.id)")
     }
     
     func encode(to encoder: Encoder) throws {
@@ -89,6 +82,18 @@ struct Goal: Equatable, Identifiable, Codable {
     // MARK: - 自訂
     /// 目前正在編輯的細項 ID（若為 nil 代表沒有正在新增或編輯）
     var editingItemId: String? = nil
+    
+    /// 記憶本地展開狀態以觸發畫面機制 (Optional 屬性享有 Swift 免宣告豁免權，不用寫入任何 init)
+    var _localExpandedState: Bool?
+    
+    /// 是否展開
+    var isExpanded: Bool {
+        get { _localExpandedState ?? UserInfoManager.shared.isGoalExpanded(for: id) }
+        set {
+            _localExpandedState = newValue
+            UserInfoManager.shared.setGoalExpanded(newValue, for: id)
+        }
+    }
     
     /// 進度
     var progress: Double {
