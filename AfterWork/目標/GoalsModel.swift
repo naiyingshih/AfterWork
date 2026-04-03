@@ -9,6 +9,7 @@ import Foundation
 import IdentifiedCollections
 import ComposableArchitecture
 
+/// 目標
 @ObservableState
 struct Goal: Equatable, Identifiable, Codable {
     typealias ID = String
@@ -20,6 +21,8 @@ struct Goal: Equatable, Identifiable, Codable {
     var description: String?
     /// 預計完成時間
     var targetDate: Date?
+    /// 完成時間
+    var finishDate: Date?
     /// 細項
     var details: IdentifiedArrayOf<GoalItem>
     /// 建立時間
@@ -32,6 +35,7 @@ struct Goal: Equatable, Identifiable, Codable {
         title: String,
         description: String? = nil,
         targetDate: Date? = nil,
+        finishDate: Date? = nil,
         details: IdentifiedArrayOf<GoalItem> = [],
         createdTime: Date,
         updatedTime: Date
@@ -40,6 +44,7 @@ struct Goal: Equatable, Identifiable, Codable {
         self.title = title
         self.description = description
         self.targetDate = targetDate
+        self.finishDate = finishDate
         self.details = details
         self.createdTime = createdTime
         self.updatedTime = updatedTime
@@ -50,6 +55,7 @@ struct Goal: Equatable, Identifiable, Codable {
         case title
         case description
         case targetDate
+        case finishDate
         case details
         case createdTime
         case updatedTime
@@ -61,6 +67,7 @@ struct Goal: Equatable, Identifiable, Codable {
         self.title = try container.decode(String.self, forKey: .title)
         self.description = try container.decodeIfPresent(String.self, forKey: .description)
         self.targetDate = try container.decodeIfPresent(Date.self, forKey: .targetDate)
+        self.finishDate = try container.decodeIfPresent(Date.self, forKey: .finishDate)
         let detailsArray = try container.decodeIfPresent([GoalItem].self, forKey: .details) ?? []
         self.details = IdentifiedArray(uniqueElements: detailsArray)
         self.createdTime = try container.decode(Date.self, forKey: .createdTime)
@@ -73,28 +80,28 @@ struct Goal: Equatable, Identifiable, Codable {
         try container.encode(title, forKey: .title)
         try container.encodeIfPresent(description, forKey: .description)
         try container.encodeIfPresent(targetDate, forKey: .targetDate)
+        try container.encodeIfPresent(finishDate, forKey: .finishDate)
         let detailsArray = Array(details)
         try container.encode(detailsArray, forKey: .details)
         try container.encode(createdTime, forKey: .createdTime)
         try container.encode(updatedTime, forKey: .updatedTime)
     }
     
-    // MARK: - 自訂
-    /// 目前正在編輯的細項 ID（若為 nil 代表沒有正在新增或編輯）
-    var editingItemId: String? = nil
-    
+    // MARK: 自訂
+    /// 是否顯示新增細項輸入列
+    var isAddingItem: Bool = false
+    /// 新增細項輸入內容
+    var newItemTitle: String = ""
     /// 記憶本地展開狀態以觸發畫面機制 (Optional 屬性享有 Swift 免宣告豁免權，不用寫入任何 init)
     var _localExpandedState: Bool?
-    
     /// 是否展開
     var isExpanded: Bool {
-        get { _localExpandedState ?? UserInfoManager.shared.isGoalExpanded(for: id) }
+        get { _localExpandedState ?? UserInfoManager.shared.isGoalExpanded(for: id, default: details.isEmpty) }
         set {
             _localExpandedState = newValue
             UserInfoManager.shared.setGoalExpanded(newValue, for: id)
         }
     }
-    
     /// 進度
     var progress: Double {
         guard !details.isEmpty else { return 0 }
@@ -105,6 +112,7 @@ struct Goal: Equatable, Identifiable, Codable {
     }
 }
 
+/// 目標 - 細項
 struct GoalItem: Equatable, Identifiable, Codable {
     /// ID
     let id: String

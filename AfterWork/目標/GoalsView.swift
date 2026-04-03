@@ -14,14 +14,45 @@ struct GoalsView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEachStore(
-                    store.scope(state: \.goals, action: \.goal)
-                ) { goalStore in
-                    GoalCardView(store: goalStore)
-                        .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+                if !store.uncompletedGoals.isEmpty {
+                    HStack {
+                        Text("未完成")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
+                    ForEachStore(
+                        store.scope(state: \.uncompletedGoals, action: \.goal)
+                    ) { goalStore in
+                        GoalCardView(store: goalStore)
+                            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                    }
+                }
+                
+                if !store.completedGoals.isEmpty {
+                    HStack {
+                        Text("已完成")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
+                    ForEachStore(
+                        store.scope(state: \.completedGoals, action: \.goal)
+                    ) { goalStore in
+                        GoalCardView(store: goalStore)
+                            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                    }
                 }
             }
             .listStyle(.insetGrouped)
+            .listSectionSpacing(12)
+            .animation(.default, value: store.goals)
             .navigationTitle("目標")
             .onAppear {
                 store.send(.onAppear)

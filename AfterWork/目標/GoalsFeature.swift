@@ -17,6 +17,31 @@ struct GoalsFeature {
         var goalForm: GoalFormFeature.State?
         @Presents var alert: AlertState<Action.Alert>?
         var isLoading: Bool = false
+        
+        var uncompletedGoals: IdentifiedArrayOf<Goal> {
+            let filtered = goals.filter { $0.progress < 1.0 }
+            return IdentifiedArray(uniqueElements: filtered.sorted(by: Self.sortGoals))
+        }
+        
+        var completedGoals: IdentifiedArrayOf<Goal> {
+            let filtered = goals.filter { $0.progress == 1.0 }
+            return IdentifiedArray(uniqueElements: filtered.sorted(by: Self.sortGoals))
+        }
+        
+        static func sortGoals(_ goal1: Goal, _ goal2: Goal) -> Bool {
+            if let d1 = goal1.targetDate, let d2 = goal2.targetDate {
+                if d1 == d2 {
+                    return goal1.createdTime > goal2.createdTime
+                }
+                return d1 < d2
+            } else if goal1.targetDate != nil {
+                return true
+            } else if goal2.targetDate != nil {
+                return false
+            } else {
+                return goal1.createdTime > goal2.createdTime
+            }
+        }
     }
     
     enum Action {
@@ -50,7 +75,7 @@ struct GoalsFeature {
                 }
                 
             case let .goalsLoaded(loadedGoals):
-                state.goals = IdentifiedArrayOf(uniqueElements: loadedGoals.sorted(by: { $0.createdTime > $1.createdTime }))
+                state.goals = IdentifiedArrayOf(uniqueElements: loadedGoals.sorted(by: State.sortGoals))
                 state.isLoading = false
                 return .none
                 

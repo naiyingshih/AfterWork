@@ -18,7 +18,7 @@ struct GoalFeature {
         case itemChecked(id: GoalItem.ID, Bool)
         case deleteItem(IndexSet)
         case addItemButtonTapped
-        case itemTitleChanged(id: GoalItem.ID, String)
+        case newItemTitleChanged(String)
         case saveItemButtonTapped
         case cancelItemButtonTapped
         case moveItems(IndexSet, Int)
@@ -56,51 +56,70 @@ struct GoalFeature {
                 state.updatedTime = date()
                 
                 sortDetails(&state)
+                
+                if state.progress == 1.0 {
+                    if state.finishDate == nil {
+                        state.finishDate = date()
+                    }
+                    state.isExpanded = false
+                } else {
+                    state.finishDate = nil
+                }
+                
                 return .send(.delegate(.updateGoalDetails(state.id, state.details)))
                 
             case let .deleteItem(indexSet):
                 state.details.remove(atOffsets: indexSet)
                 state.updatedTime = date()
+                
+                if state.progress == 1.0 && !state.details.isEmpty {
+                    if state.finishDate == nil {
+                        state.finishDate = date()
+                    }
+                    state.isExpanded = false
+                } else {
+                    state.finishDate = nil
+                }
+                
                 return .send(.delegate(.updateGoalDetails(state.id, state.details)))
                 
             case .addItemButtonTapped:
-                let newItem = GoalItem(
-                    id: uuid().uuidString,
-                    title: "",
-                    isDone: false,
-                    isAddedToToday: false,
-                    order: state.details.count,
-                    createdTime: date(),
-                    updatedTime: date()
-                )
-                state.details.append(newItem)
-                state.editingItemId = newItem.id
-                sortDetails(&state)
+                state.isAddingItem = true
+                state.newItemTitle = ""
                 return .none
-                
-            case let .itemTitleChanged(id, text):
-                state.details[id: id]?.title = text
+
+            case let .newItemTitleChanged(text):
+                state.newItemTitle = text
                 return .none
                 
             case .saveItemButtonTapped:
-                guard let id = state.editingItemId,
-                      let title = state.details[id: id]?.title,
-                      !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    return .none
+                if state.isAddingItem {
+                    let title = state.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !title.isEmpty else { return .none }
+
+                    let newItem = GoalItem(
+                        id: uuid().uuidString,
+                        title: title,
+                        isDone: false,
+                        isAddedToToday: false,
+                        order: state.details.count,
+                        createdTime: date(),
+                        updatedTime: date()
+                    )
+                    state.details.append(newItem)
+                    sortDetails(&state)
+
+                    state.isAddingItem = false
+                    state.newItemTitle = ""
+                    state.updatedTime = date()
+
+                    return .send(.delegate(.updateGoalDetails(state.id, state.details)))
                 }
-                
-                state.details[id: id]?.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
-                state.details[id: id]?.updatedTime = date()
-                state.editingItemId = nil
-                state.updatedTime = date()
-                
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .none
                 
             case .cancelItemButtonTapped:
-                if let id = state.editingItemId {
-                    state.details.remove(id: id)
-                }
-                state.editingItemId = nil
+                state.isAddingItem = false
+                state.newItemTitle = ""
                 return .none
                 
             case let .moveItems(source, destination):

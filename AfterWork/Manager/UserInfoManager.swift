@@ -20,7 +20,11 @@ class UserInfoManager {
         defaults.set(isExpanded, forKey: "expanded-\(id)")
     }
     
-    func isGoalExpanded(for id: String) -> Bool {
-        return defaults.bool(forKey: "expanded-\(id)")
+    func isGoalExpanded(for id: String, default defaultVal: Bool) -> Bool {
+        let key = "expanded-\(id)"
+        if defaults.object(forKey: key) == nil {
+            return defaultVal
+        }
+        return defaults.bool(forKey: key)
     }
 }

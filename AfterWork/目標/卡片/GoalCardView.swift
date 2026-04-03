@@ -40,6 +40,11 @@ struct GoalCardView: View {
                 }
                 
                 HStack {
+                    if let date = store.finishDate {
+                        Text("完成日：\(DateFormatter.yyyyMMdd.string(from: date))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                     Spacer()
                     if let date = store.targetDate {
                         Text("預計完成日：\(DateFormatter.yyyyMMdd.string(from: date))")
@@ -77,73 +82,39 @@ struct GoalCardView: View {
             if store.isExpanded {
                 if !store.details.isEmpty {
                     ForEach(store.details) { item in
-                        if store.editingItemId == item.id {
-                            HStack {
-                                TextField(
-                                    "輸入細項",
-                                    text: Binding(
-                                        get: { store.details[id: item.id]?.title ?? "" },
-                                        set: { store.send(.itemTitleChanged(id: item.id, $0)) }
-                                    )
-                                )
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .onSubmit {
-                                    store.send(.saveItemButtonTapped)
-                                }
-                                
-                                Button("取消") {
-                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                                    store.send(.cancelItemButtonTapped)
-                                }
-                                .font(.subheadline)
-                                .foregroundColor(.red)
-                                .buttonStyle(PlainButtonStyle())
-                                
-                                Button("儲存") {
-                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                                    store.send(.saveItemButtonTapped)
-                                }
-                                .font(.subheadline)
-                                .foregroundColor(.blue)
-                                .disabled(item.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                                .buttonStyle(PlainButtonStyle())
+                        HStack {
+                            Button {
+                                store.send(.itemChecked(id: item.id, !item.isDone))
+                            } label: {
+                                Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
+                                    .foregroundColor(item.isDone ? .blue : .secondary)
+                                    .imageScale(.large)
                             }
-                            .padding(.vertical, 4)
-                        } else {
-                            HStack {
-                                Button {
-                                    store.send(.itemChecked(id: item.id, !item.isDone))
-                                } label: {
-                                    Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(item.isDone ? .blue : .secondary)
-                                        .imageScale(.large)
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Text(item.title)
+                                .strikethrough(item.isDone, color: .secondary)
+                                .foregroundColor(item.isDone ? .secondary : .primary)
+                            
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                if let index = store.details.index(id: item.id) {
+                                    store.send(.deleteItem(IndexSet(integer: index)))
                                 }
-                                .buttonStyle(PlainButtonStyle())
-                                
-                                Text(item.title)
-                                    .strikethrough(item.isDone, color: .secondary)
-                                    .foregroundColor(item.isDone ? .secondary : .primary)
-                                
-                                Spacer()
+                            } label: {
+                                Label("刪除", systemImage: "trash")
                             }
-                            .padding(.vertical, 4)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    if let index = store.details.index(id: item.id) {
-                                        store.send(.deleteItem(IndexSet(integer: index)))
-                                    }
-                                } label: {
-                                    Label("刪除", systemImage: "trash")
-                                }
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                store.send(.addToToday(id: item.id))
+                            } label: {
+                                Label("加入今天", systemImage: "calendar.badge.plus")
                             }
-                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                Button {
-                                    store.send(.addToToday(id: item.id))
-                                } label: {
-                                    Label("加入今天", systemImage: "calendar.badge.plus")
-                                }
-                                .tint(.orange)
-                            }
+                            .tint(.orange)
                         }
                     }
                     .onMove { source, destination in
@@ -151,7 +122,39 @@ struct GoalCardView: View {
                     }
                 }
                 
-                if store.editingItemId == nil {
+                if store.isAddingItem {
+                    HStack {
+                        TextField(
+                            "輸入細項",
+                            text: Binding(
+                                get: { store.newItemTitle },
+                                set: { store.send(.newItemTitleChanged($0)) }
+                            )
+                        )
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .onSubmit {
+                            store.send(.saveItemButtonTapped)
+                        }
+                        
+                        Button("取消") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            store.send(.cancelItemButtonTapped)
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.red)
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Button("儲存") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            store.send(.saveItemButtonTapped)
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                        .disabled(store.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .padding(.vertical, 4)
+                } else {
                     Button {
                         store.send(.addItemButtonTapped)
                     } label: {
