@@ -2,7 +2,7 @@
 //  GoalsView.swift
 //  AfterWork
 //
-//  Created by NY on 2026/1/24.
+//  Created by NY.
 //
 
 import ComposableArchitecture
@@ -13,42 +13,88 @@ struct GoalsView: View {
     
     var body: some View {
         NavigationStack {
-            
-            ScrollView {
-                VStack(spacing: 16) {
+            List {
+                if !store.uncompletedGoals.isEmpty {
+                    HStack {
+                        Text("未完成")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
                     ForEachStore(
-                        store.scope(state: \.goals, action: \.goal)
+                        store.scope(state: \.uncompletedGoals, action: \.goal)
                     ) { goalStore in
                         GoalCardView(store: goalStore)
+                            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
                     }
                 }
-                .padding()
-            }
-            
-            .navigationTitle("目標")
-            
-            .overlay(alignment: .bottomTrailing) {
-                Button {
-                    store.send(.addGoalButtonTapped)
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(.blue)
-                        .clipShape(Circle())
+                
+                if !store.completedGoals.isEmpty {
+                    HStack {
+                        Text("已完成")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
+                    ForEachStore(
+                        store.scope(state: \.completedGoals, action: \.goal)
+                    ) { goalStore in
+                        GoalCardView(store: goalStore)
+                            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                    }
                 }
-                .padding()
+            }
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(12)
+            .animation(.default, value: store.goals)
+            .navigationTitle("目標")
+            .onAppear {
+                store.send(.onAppear)
+            }
+            .alert($store.scope(state: \.alert, action: \.alert))
+        }
+        .scrollDismissesKeyboard(.immediately)
+        .overlay(alignment: .bottomTrailing) {
+            Button {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                store.send(.addGoalButtonTapped)
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .frame(width: 56, height: 56)
+                    .background(Color.blue)
+                    .clipShape(Circle())
+                    .shadow(radius: 4)
+            }
+            .padding()
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .overlay {
+            if let formStore = store.scope(state: \.goalForm, action: \.goalForm) {
+                ZStack {
+                    Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            store.send(.goalForm(.cancelButtonTapped))
+                        }
+                    
+                    GoalFormView(store: formStore)
+                        .frame(maxHeight: 500)
+                        .background(Color(UIColor.systemBackground))
+                        .cornerRadius(16)
+                        .padding(24)
+                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
         }
+        .toolbar(store.goalForm != nil ? .hidden : .visible, for: .tabBar)
     }
-}
-
-#Preview {
-    GoalsView(
-        store: Store(
-            initialState: .mock,
-            reducer: { GoalsFeature() }
-        )
-    )
 }
