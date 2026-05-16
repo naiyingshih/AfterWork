@@ -51,6 +51,10 @@ struct AppFeature {
             case .goal:
                 return .none
                 
+            case .today(.delegate(.switchToGoals)):
+                state.selectedTab = .goal
+                return .none
+                
             case .today:
                 return .none
                 
