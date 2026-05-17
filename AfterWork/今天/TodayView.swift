@@ -37,6 +37,12 @@ public struct TodayView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                store.send(.onAppear)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+                store.send(.onAppear)
+            }
             .sheet(item: $store.scope(state: \.habitManage, action: \.habitManage)) { hbStore in
                 HabitManageSheet(store: hbStore)
             }

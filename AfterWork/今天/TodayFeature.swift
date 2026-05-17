@@ -87,16 +87,21 @@ struct TodayFeature {
                 return .none
                 
             case let .fetchTasksResponse(.success(tasks)):
-                state.todayTasks = IdentifiedArray(uniqueElements: tasks)
+                let calendar = Calendar.current
+                let todaysTasks = tasks.filter { calendar.isDateInToday($0.createdTime) }
+                state.todayTasks = IdentifiedArray(uniqueElements: todaysTasks)
                 return .none
             case .fetchTasksResponse(.failure):
                 return .none
                 
             case let .fetchGoalsResponse(.success(goals)):
                 var items: [TodayGoalItem] = []
+                let calendar = Calendar.current
                 for goal in goals {
                     for detail in goal.details where detail.isAddedToToday {
-                        items.append(TodayGoalItem(item: detail, goalId: goal.id, goalTitle: goal.title))
+                        if let addedTime = detail.addedToTodayTime, calendar.isDateInToday(addedTime) {
+                            items.append(TodayGoalItem(item: detail, goalId: goal.id, goalTitle: goal.title))
+                        }
                     }
                 }
                 state.goalItems = IdentifiedArray(uniqueElements: items)
