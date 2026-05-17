@@ -18,7 +18,7 @@ struct AppFeature {
     
     @ObservableState
     struct State: Equatable {
-        var selectedTab: Tab = .goal
+        var selectedTab: Tab = .today
         var goalsFeature = GoalsFeature.State()
         var todayFeature = TodayFeature.State()
         var calendarFeature = CalendarFeature.State()
@@ -49,6 +49,10 @@ struct AppFeature {
                 return .none
                 
             case .goal:
+                return .none
+                
+            case .today(.delegate(.switchToGoals)):
+                state.selectedTab = .goal
                 return .none
                 
             case .today:

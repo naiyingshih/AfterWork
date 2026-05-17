@@ -25,19 +25,28 @@ extension GoalsRepository: DependencyKey {
             }
         },
         saveGoal: { goal in
-            try await Firestore.firestore().collection("goals").document(goal.id).setData(from: goal)
+            try await Firestore.firestore()
+                .collection("goals")
+                .document(goal.id)
+                .setData(from: goal)
         },
         deleteGoal: { id in
-            try await Firestore.firestore().collection("goals").document(id).delete()
+            try await Firestore.firestore()
+                .collection("goals")
+                .document(id)
+                .delete()
         },
         updateGoalDetails: { id, details in
             // 將陣列轉換成 Data Map 以相容 Firebase SDK 的特定直寫模式
             let encoder = Firestore.Encoder()
             let detailsData = try details.map { try encoder.encode($0) }
-            try await Firestore.firestore().collection("goals").document(id).updateData([
-                "details": detailsData,
-                "updatedTime": Date()
-            ])
+            try await Firestore.firestore()
+                .collection("goals")
+                .document(id)
+                .updateData([
+                    "details": detailsData,
+                    "updatedTime": Date()
+                ])
         }
     )
 }
@@ -48,3 +57,4 @@ extension DependencyValues {
         set { self[GoalsRepository.self] = newValue }
     }
 }
+

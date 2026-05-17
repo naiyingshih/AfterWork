@@ -122,6 +122,8 @@ struct GoalItem: Equatable, Identifiable, Codable {
     var isDone: Bool
     /// 是否加入今日
     var isAddedToToday: Bool
+    /// 加入今日的時間
+    var addedToTodayTime: Date?
     /// 順序
     var order: Int
     /// 建立時間
