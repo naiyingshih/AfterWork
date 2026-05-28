@@ -17,21 +17,29 @@ public struct TodayView: View {
     
     public var body: some View {
         NavigationStack {
-            ScrollView {
+            List {
                 VStack(spacing: 32) {
                     
-                    // MARK: - Header (Optional custom header matching reference)
+                    // MARK: - Header
                     headerSection
                     
                     // MARK: - Habits Section
                     habitsSection
                     
-                    // MARK: - Tasks Section
-                    tasksSection
+                    // MARK: - Tasks Header
+                    tasksHeaderSection
                     
                 }
                 .padding()
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                
+                // Tasks Content
+                tasksContentSection
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             .navigationBarHidden(true)
             .background(Color.gray.opacity(0.05).edgesIgnoringSafeArea(.all))
             .onAppear {
@@ -110,67 +118,90 @@ public struct TodayView: View {
         }
     }
     
-    private var tasksSection: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Text("今日任務")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.gray)
+    private var tasksHeaderSection: some View {
+        HStack {
+            Text("今日任務")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.gray)
+            
+            Spacer()
+            
+            HStack(spacing: 12) {
+                Button(action: {
+                    store.send(.addTaskButtonTapped)
+                }) {
+                    Text("+ 建立")
+                        .font(.system(size: 16, weight: .bold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .shadow(color: .black.opacity(0.05), radius: 2)
+                }
+                .buttonStyle(.plain)
                 
-                Spacer()
-                
-                HStack(spacing: 12) {
-                    Button(action: {
-                        store.send(.addTaskButtonTapped)
-                    }) {
-                        Text("+ 建立")
-                            .font(.system(size: 16, weight: .bold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .shadow(color: .black.opacity(0.05), radius: 2)
-                    }
-                    .buttonStyle(.plain)
-                    
-                    Button(action: {
-                        store.send(.pullFromGoalsButtonTapped)
-                    }) {
-                        Text("從目標拉取")
-                            .font(.system(size: 16, weight: .bold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .shadow(color: .black.opacity(0.05), radius: 2)
-                    }
-                    .buttonStyle(.plain)
+                Button(action: {
+                    store.send(.pullFromGoalsButtonTapped)
+                }) {
+                    Text("從目標拉取")
+                        .font(.system(size: 16, weight: .bold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .shadow(color: .black.opacity(0.05), radius: 2)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var tasksContentSection: some View {
+        // Goal Items
+        ForEach(store.goalItems) { todayItem in
+            TodayTaskCardView(
+                title: todayItem.item.title,
+                isDone: todayItem.item.isDone,
+                sourceGoalName: todayItem.goalTitle,
+                onToggle: {
+                    store.send(.toggleGoalItem(todayItem), animation: .default)
+                }
+            )
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    store.send(.deleteGoalItem(todayItem), animation: .default)
+                } label: {
+                    Label("刪除", systemImage: "trash")
                 }
             }
-            
-            VStack(spacing: 12) {
-                // Goal Items
-                ForEach(store.goalItems) { todayItem in
-                    TodayTaskCardView(
-                        title: todayItem.item.title,
-                        isDone: todayItem.item.isDone,
-                        sourceGoalName: todayItem.goalTitle,
-                        onToggle: {
-                            store.send(.toggleGoalItem(todayItem), animation: .default)
-                        }
-                    )
+        }
+        
+        // Standalone Tasks
+        ForEach(store.todayTasks) { task in
+            TodayTaskCardView(
+                title: task.title,
+                isDone: task.isDone,
+                sourceGoalName: nil,
+                onToggle: {
+                    store.send(.toggleTask(task), animation: .default)
                 }
-                
-                // Standalone Tasks
-                ForEach(store.todayTasks) { task in
-                    TodayTaskCardView(
-                        title: task.title,
-                        isDone: task.isDone,
-                        sourceGoalName: nil,
-                        onToggle: {
-                            store.send(.toggleTask(task), animation: .default)
-                        }
-                    )
+            )
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    store.send(.deleteTask(task), animation: .default)
+                } label: {
+                    Label("刪除", systemImage: "trash")
                 }
             }
         }
