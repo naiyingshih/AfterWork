@@ -132,9 +132,10 @@ public struct TodayView: View {
                 }) {
                     Text("+ 建立")
                         .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.white)
+                        .background(Color(UIColor.systemBackground))
                         .cornerRadius(8)
                         .shadow(color: .black.opacity(0.05), radius: 2)
                 }
@@ -145,9 +146,10 @@ public struct TodayView: View {
                 }) {
                     Text("從目標拉取")
                         .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.white)
+                        .background(Color(UIColor.systemBackground))
                         .cornerRadius(8)
                         .shadow(color: .black.opacity(0.05), radius: 2)
                 }
