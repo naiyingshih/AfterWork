@@ -43,6 +43,9 @@ struct TodayFeature {
         case toggleTask(TodayTask)
         case toggleGoalItem(TodayGoalItem)
         
+        case deleteTask(TodayTask)
+        case deleteGoalItem(TodayGoalItem)
+        
         case addHabitButtonTapped
         case editHabitButtonTapped(Habit)
         case addTaskButtonTapped
@@ -143,6 +146,25 @@ struct TodayFeature {
                         goal.details[id: newTodayItem.id] = newTodayItem.item
                         let detailsArray = Array(goal.details)
                         try await goalsRepository.updateGoalDetails(goal.id, detailsArray)
+                    }
+                }
+                
+            case let .deleteTask(task):
+                state.todayTasks.remove(id: task.id)
+                return .run { send in
+                    try? await todayTasksRepository.deleteTask(task.id)
+                }
+                
+            case let .deleteGoalItem(todayItem):
+                state.goalItems.remove(id: todayItem.id)
+                return .run { send in
+                    let goals = try? await goalsRepository.fetchGoals()
+                    if var goal = goals?.first(where: { $0.id == todayItem.goalId }) {
+                        var updatedItem = todayItem.item
+                        updatedItem.isAddedToToday = false
+                        updatedItem.addedToTodayTime = nil
+                        goal.details[id: todayItem.id] = updatedItem
+                        try? await goalsRepository.updateGoalDetails(goal.id, Array(goal.details))
                     }
                 }
                 
