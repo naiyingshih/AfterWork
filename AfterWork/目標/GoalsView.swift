@@ -18,7 +18,7 @@ struct GoalsView: View {
                     HStack {
                         Text("未完成")
                             .font(.headline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.labelSecondary)
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
@@ -29,6 +29,8 @@ struct GoalsView: View {
                     ) { goalStore in
                         GoalCardView(store: goalStore)
                             .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                            .listRowBackground(Color.card)
+                            .listRowSeparatorTint(Color.hairline)
                     }
                 }
                 
@@ -36,7 +38,7 @@ struct GoalsView: View {
                     HStack {
                         Text("已完成")
                             .font(.headline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.labelSecondary)
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
@@ -47,9 +49,13 @@ struct GoalsView: View {
                     ) { goalStore in
                         GoalCardView(store: goalStore)
                             .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                            .listRowBackground(Color.card)
+                            .listRowSeparatorTint(Color.hairline)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.background)
             .listStyle(.insetGrouped)
             .listSectionSpacing(12)
             .animation(.default, value: store.goals)
@@ -67,9 +73,9 @@ struct GoalsView: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.title2)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.onMain)
                     .frame(width: 56, height: 56)
-                    .background(Color.blue)
+                    .background(Color.main)
                     .clipShape(Circle())
                     .shadow(radius: 4)
             }
@@ -87,7 +93,7 @@ struct GoalsView: View {
                     
                     GoalFormView(store: formStore)
                         .frame(maxHeight: 500)
-                        .background(Color(UIColor.systemBackground))
+                        .background(Color.card)
                         .cornerRadius(16)
                         .padding(24)
                         .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)

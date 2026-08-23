@@ -26,7 +26,7 @@ struct CalendarView: View {
                     }
                     .padding(.vertical, 16)
                     .padding(.horizontal, 12)
-                    .background(Color(.secondarySystemGroupedBackground))
+                    .background(Color.card)
                     .cornerRadius(20)
                     .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                     
@@ -43,7 +43,7 @@ struct CalendarView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .background(Color.background.ignoresSafeArea())
             .navigationTitle("回顧")
             .onAppear {
                 store.send(.onAppear)
@@ -63,7 +63,7 @@ struct MonthHeaderView: View {
         HStack {
             Button(action: onPrevious) {
                 Image(systemName: "chevron.left")
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.label)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .contentShape(Rectangle())
@@ -74,12 +74,13 @@ struct MonthHeaderView: View {
             Text(monthYearString(from: month))
                 .font(.headline)
                 .bold()
+                .foregroundColor(Color.label)
             
             Spacer()
             
             Button(action: onNext) {
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.label)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .contentShape(Rectangle())
@@ -137,7 +138,7 @@ struct CalendarGridView: View {
                 ForEach(["日", "一", "二", "三", "四", "五", "六"], id: \.self) { day in
                     Text(day)
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.labelSecondary)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -234,22 +235,18 @@ struct DayCellView: View {
             Text("\(calendar.component(.day, from: date))")
                 .font(.system(size: 16, weight: isSelected || isToday ? .bold : .regular))
                 .frame(width: 36, height: 36)
-                .background(isSelected ? Color.blue : (isToday ? Color.gray.opacity(0.15) : Color.clear))
-                .foregroundColor(isSelected ? .white : .primary)
+                .background(isSelected ? Color.main : (isToday ? Color.hairline : Color.clear))
+                .foregroundColor(isSelected ? Color.onMain : Color.label)
                 .clipShape(Circle())
             
             // Habit dots
             HStack(spacing: 4) {
                 let habitTypes = executedHabitTypes(on: date, habits: Array(store.habits))
                 
-                if habitTypes.contains(.health) {
-                    Circle().fill(Color.green).frame(width: 5, height: 5)
-                }
-                if habitTypes.contains(.learning) {
-                    Circle().fill(Color.blue).frame(width: 5, height: 5)
-                }
-                if habitTypes.contains(.chores) {
-                    Circle().fill(Color.orange).frame(width: 5, height: 5)
+                ForEach(HabitType.allCases, id: \.self) { type in
+                    if habitTypes.contains(type) {
+                        Circle().fill(type.accentColor).frame(width: 5, height: 5)
+                    }
                 }
                 
                 if habitTypes.isEmpty {

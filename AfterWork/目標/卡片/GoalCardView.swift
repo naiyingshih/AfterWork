@@ -18,7 +18,7 @@ struct GoalCardView: View {
                 HStack {
                     Text(store.title)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Color.label)
                     
                     Spacer()
                     
@@ -26,38 +26,47 @@ struct GoalCardView: View {
                         store.send(.toggleExpanded)
                     } label: {
                         Image(systemName: store.isExpanded ? "chevron.up" : "chevron.down")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.labelSecondary)
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
                 
                 HStack(spacing: 8) {
-                    ProgressView(value: store.progress)
-                        .tint(.blue)
+                    // 自繪進度條：ProgressView 的底軌是系統色，無法換成色票
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.hairline)
+                            Capsule()
+                                .fill(Color.main)
+                                .frame(width: geo.size.width * store.progress)
+                        }
+                    }
+                    .frame(height: 5)
                     Text("\(Int(round(store.progress * 100)))%")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.labelSecondary)
                 }
                 
                 HStack {
                     if let date = store.finishDate {
                         Text("完成日：\(DateFormatter.yyyyMMdd.string(from: date))")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.labelSecondary)
                     }
                     Spacer()
                     if let date = store.targetDate {
                         Text("預計完成日：\(DateFormatter.yyyyMMdd.string(from: date))")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.labelSecondary)
                     }
                 }
                 
                 if store.isExpanded && store.description?.isEmpty == false {
                     Divider()
+                        .overlay(Color.hairline)
                     Text(store.description ?? "")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.labelSecondary)
                 }
             }
             .padding(.vertical, 4)
@@ -87,14 +96,14 @@ struct GoalCardView: View {
                                 store.send(.itemChecked(id: item.id, !item.isDone))
                             } label: {
                                 Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(item.isDone ? .blue : .secondary)
+                                    .foregroundColor(item.isDone ? Color.main : Color.labelTertiary)
                                     .imageScale(.large)
                             }
                             .buttonStyle(PlainButtonStyle())
                             
                             Text(item.title)
-                                .strikethrough(item.isDone, color: .secondary)
-                                .foregroundColor(item.isDone ? .secondary : .primary)
+                                .strikethrough(item.isDone, color: Color.labelTertiary)
+                                .foregroundColor(item.isDone ? Color.labelTertiary : Color.label)
                             
                             Spacer()
                         }
@@ -114,7 +123,7 @@ struct GoalCardView: View {
                             } label: {
                                 Label("加入今天", systemImage: "calendar.badge.plus")
                             }
-                            .tint(.orange)
+                            .tint(Color.main)
                         }
                     }
                     .onMove { source, destination in
@@ -141,7 +150,7 @@ struct GoalCardView: View {
                             store.send(.cancelItemButtonTapped)
                         }
                         .font(.subheadline)
-                        .foregroundColor(.red)
+                        .foregroundColor(Color.labelSecondary)
                         .buttonStyle(PlainButtonStyle())
                         
                         Button("儲存") {
@@ -149,7 +158,7 @@ struct GoalCardView: View {
                             store.send(.saveItemButtonTapped)
                         }
                         .font(.subheadline)
-                        .foregroundColor(.blue)
+                        .foregroundColor(Color.main)
                         .disabled(store.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .buttonStyle(PlainButtonStyle())
                     }
@@ -159,7 +168,7 @@ struct GoalCardView: View {
                         store.send(.addItemButtonTapped)
                     } label: {
                         Label("新增細項", systemImage: "plus")
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color.main)
                     }
                 }
             }

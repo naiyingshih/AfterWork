@@ -21,30 +21,33 @@ public struct TodayTaskSheet: View {
                 Text("今天想完成什麼？")
                     .font(.title2)
                     .fontWeight(.bold)
+                    .foregroundColor(Color.label)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 24)
                 
                 TextField("任務名稱", text: $store.taskTitle)
                     .padding()
-                    .background(Color.gray.opacity(0.1))
+                    .background(Color.fieldBackground)
                     .cornerRadius(12)
                 
                 Spacer()
             }
             .padding(.horizontal, 24)
+            .background(Color.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("取消") {
                         store.send(.cancelButtonTapped)
                     }
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.labelSecondary)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("確認") {
                         store.send(.confirmButtonTapped)
                     }
                     .fontWeight(.bold)
+                    .foregroundColor(Color.main)
                     .disabled(store.taskTitle.isEmpty)
                 }
             }

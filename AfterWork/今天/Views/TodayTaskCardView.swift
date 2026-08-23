@@ -26,14 +26,14 @@ public struct TodayTaskCardView: View {
                 Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
                     .resizable()
                     .frame(width: 24, height: 24)
-                    .foregroundColor(isDone ? .blue : .gray.opacity(0.3))
+                    .foregroundColor(isDone ? Color.main : Color.label.opacity(0.3))
             }
             .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(isDone ? .gray : .black)
+                    .foregroundColor(isDone ? Color.labelTertiary : Color.label)
                     .strikethrough(isDone)
                 
                 if let sourceGoalName = sourceGoalName {
@@ -43,13 +43,13 @@ public struct TodayTaskCardView: View {
                         Text("來自「\(sourceGoalName)」")
                             .font(.system(size: 12, weight: .medium))
                     }
-                    .foregroundColor(.blue.opacity(0.8))
+                    .foregroundColor(Color.main)
                 }
             }
             Spacer()
         }
         .padding()
-        .background(Color.white)
+        .background(Color.card)
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.02), radius: 8, x: 0, y: 4)
     }

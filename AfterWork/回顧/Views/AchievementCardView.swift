@@ -16,7 +16,7 @@ struct AchievementCardView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("\(dateString(from: selectedDate)) 成就")
                     .font(.headline)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.labelSecondary)
                     .padding(.bottom, 4)
                 
                 // Section 1: Tasks (TodayTask & GoalItem)
@@ -26,15 +26,16 @@ struct AchievementCardView: View {
                     HStack {
                         ZStack {
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.green.opacity(0.2))
+                                .fill(Color.main.opacity(0.15))
                                 .frame(width: 36, height: 36)
                             Image(systemName: "checkmark.circle")
-                                .foregroundColor(.green)
+                                .foregroundColor(Color.main)
                                 .font(.system(size: 18, weight: .medium))
                         }
                         Text("完成任務")
                             .font(.subheadline)
                             .bold()
+                            .foregroundColor(Color.label)
                         Spacer()
                     }
                     
@@ -43,18 +44,19 @@ struct AchievementCardView: View {
                             ForEach(dailyTasks, id: \.id) { task in
                                 Text(task.title)
                                     .font(.subheadline)
-                                    .foregroundColor(task.isDone ? .primary : .gray)
+                                    .foregroundColor(task.isDone ? Color.label : Color.labelTertiary)
                             }
                         }
                         .padding(.top, 4)
                     } else {
                         Text("無任務紀錄")
                             .font(.footnote)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.labelTertiary)
                     }
                 }
                 
                 Divider()
+                    .overlay(Color.hairline)
                     .padding(.vertical, 4)
                 
                 // Section 2: Habits
@@ -64,15 +66,16 @@ struct AchievementCardView: View {
                     HStack {
                         ZStack {
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.orange.opacity(0.2))
+                                .fill(Color.learningAccent.opacity(0.15))
                                 .frame(width: 36, height: 36)
                             Image(systemName: "flame")
-                                .foregroundColor(.orange)
+                                .foregroundColor(Color.learningAccent)
                                 .font(.system(size: 18, weight: .medium))
                         }
                         Text("執行習慣")
                             .font(.subheadline)
                             .bold()
+                            .foregroundColor(Color.label)
                     }
                     
                     if !executedHabits.isEmpty {
@@ -85,18 +88,19 @@ struct AchievementCardView: View {
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
-                            .background(Color.gray.opacity(0.1))
+                            .foregroundColor(Color.onFill)
+                            .background(habit.type.fillColor)
                             .cornerRadius(8)
                         }
                     } else {
                         Text("無習慣紀錄")
                             .font(.footnote)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.labelTertiary)
                     }
                 }
             }
             .padding(20)
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.card)
             .cornerRadius(20)
             .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         } else {

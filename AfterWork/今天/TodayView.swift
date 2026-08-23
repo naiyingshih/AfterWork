@@ -33,7 +33,7 @@ public struct TodayView: View {
                 .padding()
             }
             .navigationBarHidden(true)
-            .background(Color.gray.opacity(0.05).edgesIgnoringSafeArea(.all))
+            .background(Color.background.edgesIgnoringSafeArea(.all))
             .onAppear {
                 store.send(.onAppear)
             }
@@ -65,10 +65,11 @@ public struct TodayView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(currentDateString)
                 .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.gray)
+                .foregroundColor(Color.labelSecondary)
             
             Text("今日行動")
                 .font(.system(size: 32, weight: .heavy))
+                .foregroundColor(Color.label)
         }
     }
     
@@ -77,7 +78,7 @@ public struct TodayView: View {
             HStack {
                 Text("習慣養成")
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.labelSecondary)
                 
                 Spacer()
                 
@@ -86,7 +87,7 @@ public struct TodayView: View {
                 }) {
                     Text("新增")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.blue)
+                        .foregroundColor(Color.main)
                 }
             }
             
@@ -115,7 +116,7 @@ public struct TodayView: View {
             HStack {
                 Text("今日任務")
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color.labelSecondary)
                 
                 Spacer()
                 
@@ -125,10 +126,10 @@ public struct TodayView: View {
                     }) {
                         Text("+ 建立")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.primary)
+                            .foregroundColor(Color.label)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color(UIColor.systemBackground))
+                            .background(Color.card)
                             .cornerRadius(8)
                             .shadow(color: .black.opacity(0.05), radius: 2)
                     }
@@ -139,10 +140,10 @@ public struct TodayView: View {
                     }) {
                         Text("從目標拉取")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.primary)
+                            .foregroundColor(Color.label)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color(UIColor.systemBackground))
+                            .background(Color.card)
                             .cornerRadius(8)
                             .shadow(color: .black.opacity(0.05), radius: 2)
                     }

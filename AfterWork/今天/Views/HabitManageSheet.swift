@@ -32,7 +32,9 @@ public struct HabitManageSheet: View {
                     TextField("Icon (e.g. 🧘)", text: $store.habit.icon)
                 } header: {
                     Text("基本設定")
+                        .foregroundColor(Color.labelSecondary)
                 }
+                .listRowBackground(Color.card)
                 
                 Section {
                     Picker("習慣類型", selection: $store.habit.type) {
@@ -96,7 +98,10 @@ public struct HabitManageSheet: View {
                             }
                     }
                 }
+                .listRowBackground(Color.card)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.background)
             .navigationTitle("習慣管理")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -104,11 +109,13 @@ public struct HabitManageSheet: View {
                     Button("取消") {
                         store.send(.cancelButtonTapped)
                     }
+                    .foregroundColor(Color.labelSecondary)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("儲存") {
                         store.send(.saveButtonTapped)
                     }
+                    .foregroundColor(Color.main)
                     .disabled(store.habit.title.isEmpty)
                 }
             }
