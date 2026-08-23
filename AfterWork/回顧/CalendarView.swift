@@ -15,21 +15,35 @@ struct CalendarView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Month navigation
-                    MonthHeaderView(store: store)
+                    // Calendar Card (月份切換 + 日期格)
+                    VStack(spacing: 12) {
+                        MonthHeaderView(
+                            month: store.currentMonth,
+                            onPrevious: { store.send(.previousMonth, animation: CalendarAnimation.monthChange) },
+                            onNext: { store.send(.nextMonth, animation: CalendarAnimation.monthChange) }
+                        )
+                        CalendarGridView(store: store)
+                    }
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 12)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(20)
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                     
-                    // Calendar Grid
-                    CalendarGridView(store: store)
-                        .padding(.horizontal, 4)
-                        
-                    // Detail Card (成就)
+                    // Detail Card (成就)：本月預設顯示今天，其他月份要點日期才出現
                     if store.selectedDate != nil {
                         AchievementCardView(store: store)
-                            .padding(.top, 10)
+                            .transition(
+                                .asymmetric(
+                                    insertion: .opacity.combined(with: .move(edge: .bottom)),
+                                    removal: .opacity
+                                )
+                            )
                     }
                 }
                 .padding()
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("回顧")
             .onAppear {
                 store.send(.onAppear)
@@ -39,29 +53,36 @@ struct CalendarView: View {
 }
 
 // MARK: - MonthHeaderView
+/// 吃現成的值而不是自己去讀 store，父層 CalendarView 讀 currentMonth 就一定會帶著這裡一起更新。
 struct MonthHeaderView: View {
-    let store: StoreOf<CalendarFeature>
+    let month: Date
+    let onPrevious: () -> Void
+    let onNext: () -> Void
     
     var body: some View {
         HStack {
-            Button(action: { store.send(.previousMonth) }) {
+            Button(action: onPrevious) {
                 Image(systemName: "chevron.left")
                     .foregroundColor(.primary)
-                    .padding()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
             }
             
             Spacer()
             
-            Text(monthYearString(from: store.currentMonth))
+            Text(monthYearString(from: month))
                 .font(.headline)
                 .bold()
             
             Spacer()
             
-            Button(action: { store.send(.nextMonth) }) {
+            Button(action: onNext) {
                 Image(systemName: "chevron.right")
                     .foregroundColor(.primary)
-                    .padding()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
             }
         }
     }
@@ -73,13 +94,44 @@ struct MonthHeaderView: View {
     }
 }
 
+// MARK: - Animations
+enum CalendarAnimation {
+    /// 點箭頭切換月份（手勢滑動由原生分頁自己處理，不需要自訂動畫）
+    static let monthChange: Animation = .easeInOut(duration: 0.28)
+    /// 選日期時成就卡的出現
+    static let selectDate: Animation = .easeInOut(duration: 0.22)
+}
+
+// MARK: - Grid metrics
+/// 固定 6 週 x 7 天，讓每一頁高度一致（分頁容器需要確定高度）。
+enum CalendarGridMetrics {
+    static let rows = 6
+    static let cellHeight: CGFloat = 47
+    static let rowSpacing: CGFloat = 15
+    static let totalCells = rows * 7
+    static var height: CGFloat {
+        CGFloat(rows) * cellHeight + CGFloat(rows - 1) * rowSpacing
+    }
+}
+
 // MARK: - CalendarGridView
+/// 月份滑動用原生分頁 TabView(.page)：慣性、跟手、橡皮筋、可中斷手勢都由系統提供，
+/// 而且 selection binding 會確實回寫（.scrollPosition(id:) 在 iOS 17 + LazyHStack 下會漏事件）。
 struct CalendarGridView: View {
     let store: StoreOf<CalendarFeature>
-    let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    
+    /// 可滑動的月份範圍（今天前後各 5 年）
+    private static let monthSpan = 60
+    private static let months: [Date] = {
+        let calendar = Calendar.current
+        let base = CalendarFeature.startOfMonth(Date())
+        return (-monthSpan...monthSpan).compactMap {
+            calendar.date(byAdding: .month, value: $0, to: base)
+        }
+    }()
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             // Day of week header
             HStack {
                 ForEach(["日", "一", "二", "三", "四", "五", "六"], id: \.self) { day in
@@ -89,37 +141,55 @@ struct CalendarGridView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, 12)
             
-            // Grid
-            let days = generateDays(for: store.currentMonth)
-            LazyVGrid(columns: columns, spacing: 15) {
-                ForEach(0..<days.count, id: \.self) { index in
-                    if let date = days[index] {
-                        DayCellView(date: date, store: store)
-                            .onTapGesture {
-                                store.send(.selectDate(date))
-                            }
-                    } else {
-                        Color.clear
-                            .frame(height: 50)
-                    }
+            TabView(selection: selectedMonth) {
+                ForEach(Self.months, id: \.self) { month in
+                    MonthGridView(month: month, store: store)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                        .tag(month)
                 }
             }
-            .gesture(
-                DragGesture()
-                    .onEnded { value in
-                        if value.translation.width < -50 {
-                            store.send(.nextMonth)
-                        } else if value.translation.width > 50 {
-                            store.send(.previousMonth)
-                        }
-                    }
-            )
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: CalendarGridMetrics.height)
         }
     }
     
-    private func generateDays(for month: Date) -> [Date?] {
+    /// 雙向：滑動 -> setMonth；點箭頭改 currentMonth -> 分頁跟著切。
+    private var selectedMonth: Binding<Date> {
+        Binding(
+            get: { store.currentMonth },
+            set: { store.send(.setMonth($0)) }
+        )
+    }
+}
+
+// MARK: - MonthGridView
+struct MonthGridView: View {
+    let month: Date
+    let store: StoreOf<CalendarFeature>
+    
+    private let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    
+    var body: some View {
+        let days = Self.generateDays(for: month)
+        LazyVGrid(columns: columns, spacing: CalendarGridMetrics.rowSpacing) {
+            ForEach(0..<days.count, id: \.self) { index in
+                if let date = days[index] {
+                    DayCellView(date: date, store: store)
+                        .onTapGesture {
+                            store.send(.selectDate(date), animation: CalendarAnimation.selectDate)
+                        }
+                } else {
+                    Color.clear
+                        .frame(height: CalendarGridMetrics.cellHeight)
+                }
+            }
+        }
+    }
+    
+    /// 固定回傳 42 格（6 週），讓每一頁高度一致，換月時卡片高度不會跳動。
+    static func generateDays(for month: Date) -> [Date?] {
         let calendar = Calendar.current
         guard let monthInterval = calendar.dateInterval(of: .month, for: month) else { return [] }
         let firstDay = monthInterval.start
@@ -137,10 +207,14 @@ struct CalendarGridView: View {
             }
         }
         
+        if days.count < CalendarGridMetrics.totalCells {
+            days.append(contentsOf: Array(repeating: nil, count: CalendarGridMetrics.totalCells - days.count))
+        }
+        
         return days
     }
     
-    private func roundToMidday(_ date: Date) -> Date {
+    private static func roundToMidday(_ date: Date) -> Date {
         let calendar = Calendar.current
         return calendar.date(bySettingHour: 12, minute: 0, second: 0, of: date) ?? date
     }
@@ -195,167 +269,6 @@ struct DayCellView: View {
             }
         }
         return types
-    }
-}
-
-// MARK: - AchievementCardView
-struct AchievementCardView: View {
-    let store: StoreOf<CalendarFeature>
-    
-    var body: some View {
-        if let selectedDate = store.selectedDate {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("\(dateString(from: selectedDate)) 成就")
-                    .font(.headline)
-                    .foregroundColor(.gray)
-                    .padding(.bottom, 4)
-                
-                // Section 1: Tasks (TodayTask & GoalItem)
-                VStack(alignment: .leading, spacing: 12) {
-                    let dailyTasks = getTasks(for: selectedDate)
-                    let completedCount = dailyTasks.filter { $0.isDone }.count
-                
-                HStack {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.green.opacity(0.2))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "checkmark.circle")
-                            .foregroundColor(.green)
-                            .font(.system(size: 18, weight: .medium))
-                    }
-                    Text("完成 \(completedCount) 個任務")
-                        .font(.subheadline)
-                        .bold()
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.gray)
-                        .font(.system(size: 14))
-                }
-                
-                if !dailyTasks.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(dailyTasks, id: \.id) { task in
-                            Text(task.title)
-                                .font(.subheadline)
-                                .foregroundColor(task.isDone ? .primary : .gray)
-                        }
-                    }
-                    .padding(.top, 4)
-                } else {
-                    Text("無任務紀錄")
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                }
-            }
-            
-            Divider()
-                .padding(.vertical, 4)
-            
-            // Section 2: Habits
-            VStack(alignment: .leading, spacing: 12) {
-                let executedHabits = getExecutedHabits(on: selectedDate)
-                
-                HStack {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.orange.opacity(0.2))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "flame")
-                            .foregroundColor(.orange)
-                            .font(.system(size: 18, weight: .medium))
-                    }
-                    Text("執行習慣")
-                        .font(.subheadline)
-                        .bold()
-                }
-                
-                if !executedHabits.isEmpty {
-                    WrappingHStack(models: executedHabits) { habit in
-                        HStack(spacing: 4) {
-                            Text(habit.icon)
-                            Text(habit.title)
-                                .font(.caption)
-                                .bold()
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                    }
-                } else {
-                    Text("無習慣紀錄")
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                }
-            }
-        }
-        .padding(20)
-        .background(Color(.systemBackground))
-        .cornerRadius(20)
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-        } else {
-            EmptyView()
-        }
-    }
-    
-    func dateString(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M月d日"
-        return formatter.string(from: date)
-    }
-    
-    // Helper model for unifying Tasks
-    struct UnifiedTask: Identifiable {
-        let id: String
-        let title: String
-        let isDone: Bool
-    }
-    
-    func getTasks(for date: Date) -> [UnifiedTask] {
-        let calendar = Calendar.current
-        var result: [UnifiedTask] = []
-        
-        // 1. Add TodayTasks
-        let specificTasks = store.todayTasks.filter { calendar.isDate($0.createdTime, inSameDayAs: date) }
-        result.append(contentsOf: specificTasks.map { UnifiedTask(id: $0.id, title: $0.title, isDone: $0.isDone) })
-        
-        // 2. Add GoalItems
-        for goal in store.goals {
-            let details = goal.details.filter { item in
-                item.isAddedToToday &&
-                (item.addedToTodayTime != nil && calendar.isDate(item.addedToTodayTime!, inSameDayAs: date))
-            }
-            result.append(contentsOf: details.map { UnifiedTask(id: $0.id, title: $0.title, isDone: $0.isDone) })
-        }
-        
-        return result
-    }
-    
-    func getExecutedHabits(on date: Date) -> [Habit] {
-        let calendar = Calendar.current
-        return store.habits.filter { habit in
-            habit.completedDates.contains(where: { calendar.isDate($0, inSameDayAs: date) })
-        }
-    }
-}
-
-// Simple Wrapping HStack for Habit Tags
-struct WrappingHStack<Model, V>: View where Model: Identifiable, V: View {
-    let models: [Model]
-    let viewGenerator: (Model) -> V
-    
-    var body: some View {
-        // Fallback simple layout: just an HStack wrapped in a ScrollView if needed or simply HStack.
-        // For production, a flexible flow layout is better, but since it's just a few habits, 
-        // a horizontal scroll view is safe. Let's use it or just HBox.
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(models) { model in
-                    self.viewGenerator(model)
-                }
-            }
-        }
     }
 }
 

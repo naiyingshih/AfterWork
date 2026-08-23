@@ -13,8 +13,10 @@ import IdentifiedCollections
 struct CalendarFeature {
     @ObservableState
     struct State: Equatable {
-        var selectedDate: Date? = nil
-        var currentMonth: Date = Date()
+        /// 預設選中今天，讓 AchievementCardView 一進畫面就顯示今天的成就。
+        var selectedDate: Date? = Date()
+        /// 一律正規化到月初，才能當作 ScrollView paging 的 id。
+        var currentMonth: Date = CalendarFeature.startOfMonth(Date())
         
         var habits: IdentifiedArrayOf<Habit> = []
         var todayTasks: IdentifiedArrayOf<TodayTask> = []
@@ -61,19 +63,22 @@ struct CalendarFeature {
             case .previousMonth:
                 if let newMonth = Calendar.current.date(byAdding: .month, value: -1, to: state.currentMonth) {
                     state.currentMonth = newMonth
-                    state.selectedDate = nil
+                    state.selectedDate = Self.defaultSelectedDate(for: newMonth)
                 }
                 return .none
                 
             case .nextMonth:
                 if let newMonth = Calendar.current.date(byAdding: .month, value: 1, to: state.currentMonth) {
                     state.currentMonth = newMonth
-                    state.selectedDate = nil
+                    state.selectedDate = Self.defaultSelectedDate(for: newMonth)
                 }
                 return .none
                 
             case let .setMonth(date):
-                state.currentMonth = date
+                let month = Self.startOfMonth(date)
+                guard month != state.currentMonth else { return .none }
+                state.currentMonth = month
+                state.selectedDate = Self.defaultSelectedDate(for: month)
                 return .none
                 
             case let .fetchHabitsResponse(.success(habits)):
@@ -101,5 +106,15 @@ struct CalendarFeature {
                 return .none
             }
         }
+    }
+    
+    static func startOfMonth(_ date: Date) -> Date {
+        Calendar.current.dateInterval(of: .month, for: date)?.start ?? date
+    }
+    
+    /// 本月 -> 預設選今天；其他月份 -> 不選，AchievementCardView 隱藏直到使用者點日期。
+    private static func defaultSelectedDate(for month: Date) -> Date? {
+        let today = Date()
+        return Calendar.current.isDate(month, equalTo: today, toGranularity: .month) ? today : nil
     }
 }
