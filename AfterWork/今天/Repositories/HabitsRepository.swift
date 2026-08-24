@@ -18,15 +18,20 @@ struct HabitsRepository {
 }
 
 extension HabitsRepository: DependencyKey {
+    // 寫入一律「自己編碼 + 走 async 的 setData(_:)」，不要用 Codable 版的 setData(from:)。
+    // setData(from:) 的 completion 是選填參數，不傳就是同步 throwing —— 加 await 沒有作用，
+    // 而且只會在「編碼失敗」時 throw；伺服器拒絕（權限、規則）永遠傳不回來。
+    // 那樣的話 Firestore 回滾本地寫入時，畫面會無聲跳回舊值而不會跳提示。
     static let liveValue = Self(
         streamHabits: {
             firestoreCollectionStream("habits", as: Habit.self)
         },
         saveHabit: { habit in
+            let data = try Firestore.Encoder().encode(habit)
             try await Firestore.firestore()
                 .collection("habits")
                 .document(habit.id)
-                .setData(from: habit)
+                .setData(data)
         },
         deleteHabit: { id in
             try await Firestore.firestore()
@@ -35,10 +40,11 @@ extension HabitsRepository: DependencyKey {
                 .delete()
         },
         updateHabit: { habit in
+            let data = try Firestore.Encoder().encode(habit)
             try await Firestore.firestore()
                 .collection("habits")
                 .document(habit.id)
-                .setData(from: habit)
+                .setData(data)
         }
     )
 }

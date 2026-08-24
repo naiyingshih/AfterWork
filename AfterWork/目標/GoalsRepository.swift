@@ -23,10 +23,11 @@ extension GoalsRepository: DependencyKey {
             firestoreCollectionStream("goals", as: Goal.self)
         },
         saveGoal: { goal in
+            let data = try Firestore.Encoder().encode(goal)
             try await Firestore.firestore()
                 .collection("goals")
                 .document(goal.id)
-                .setData(from: goal)
+                .setData(data)
         },
         deleteGoal: { id in
             try await Firestore.firestore()

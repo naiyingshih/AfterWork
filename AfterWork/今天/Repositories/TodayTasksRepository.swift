@@ -23,10 +23,11 @@ extension TodayTasksRepository: DependencyKey {
             firestoreCollectionStream("todayTasks", as: TodayTask.self)
         },
         saveTask: { task in
+            let data = try Firestore.Encoder().encode(task)
             try await Firestore.firestore()
                 .collection("todayTasks")
                 .document(task.id)
-                .setData(from: task)
+                .setData(data)
         },
         deleteTask: { id in
             try await Firestore.firestore()
@@ -35,10 +36,11 @@ extension TodayTasksRepository: DependencyKey {
                 .delete()
         },
         updateTask: { task in
+            let data = try Firestore.Encoder().encode(task)
             try await Firestore.firestore()
                 .collection("todayTasks")
                 .document(task.id)
-                .setData(from: task, merge: true)
+                .setData(data, merge: true)
         }
     )
 }

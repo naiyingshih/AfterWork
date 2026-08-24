@@ -110,10 +110,22 @@ firestoreCollectionStream("habits", as: Habit.self)   // addSnapshotListener + o
 寫入**不走** shared key，而是走 repository 的逐筆 API（`updateTask`、`saveHabit`、`updateGoalDetails`…）。順序固定是：
 
 1. 先改共享狀態（畫面立刻反應）
-2. 再送 Firestore
+2. 再送 Firestore，`await` 到伺服器確認為止
 3. 失敗 → `.writeFailed(error)` → `state.alert = .writeFailed(error)`
 
 第 3 步不能省。因為是樂觀更新，寫入最終失敗時 Firestore 會**回滾那筆 pending write**，listener 隨即把舊值推回來 —— 沒有 alert 的話，使用者只會看到「剛勾好的任務自己取消勾選」，卻沒有任何線索。
+
+> ⚠️ **寫入一律「自己編碼 + 走 async 的 `setData(_:)`」，不要用 Codable 版的 `setData(from:)`。**
+>
+> `setData(from:)` 的 `completion` 是選填參數，不傳就是**同步 throwing** —— 加 `await` 沒有作用（編譯器會警告 "no 'async' operations occur within 'await' expression"），而且它只會在**編碼失敗**時 throw；伺服器拒絕（權限、安全規則）永遠傳不回來，上面第 3 步就形同虛設。
+>
+> 正確寫法（跟 `updateGoalDetails` 一致）：
+> ```swift
+> let data = try Firestore.Encoder().encode(habit)
+> try await documentRef.setData(data)   // ObjC 橋接的 async 版，會等 server ack
+> ```
+>
+> 代價：離線時 completion 永遠不會被呼叫，effect 會一直掛著直到重新連線。這沒有使用者可見的副作用（畫面早就樂觀更新過了，而且離線不會觸發回滾），只是會累積待決的 task。
 
 ### ③ 共享狀態：讓本地變更同步傳播
 
