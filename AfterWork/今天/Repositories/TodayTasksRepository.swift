@@ -10,7 +10,8 @@ import FirebaseFirestore
 import ComposableArchitecture
 
 struct TodayTasksRepository {
-    var fetchTasks: () async throws -> [TodayTask]
+    /// 持續推播的任務清單（Firestore snapshot listener）。
+    var streamTasks: () -> AsyncStream<[TodayTask]>
     var saveTask: (TodayTask) async throws -> Void
     var deleteTask: (TodayTask.ID) async throws -> Void
     var updateTask: (TodayTask) async throws -> Void
@@ -18,11 +19,8 @@ struct TodayTasksRepository {
 
 extension TodayTasksRepository: DependencyKey {
     static let liveValue = Self(
-        fetchTasks: {
-            let snapshot = try await Firestore.firestore().collection("todayTasks").getDocuments()
-            return try snapshot.documents.compactMap { doc in
-                try? doc.data(as: TodayTask.self)
-            }
+        streamTasks: {
+            firestoreCollectionStream("todayTasks", as: TodayTask.self)
         },
         saveTask: { task in
             try await Firestore.firestore()
@@ -37,13 +35,36 @@ extension TodayTasksRepository: DependencyKey {
                 .delete()
         },
         updateTask: { task in
-            var updated = task
-            updated.updatedTime = Date()
             try await Firestore.firestore()
                 .collection("todayTasks")
-                .document(updated.id)
-                .setData(from: updated, merge: true)
+                .document(task.id)
+                .setData(from: task, merge: true)
         }
+    )
+}
+
+extension TodayTasksRepository: TestDependencyKey {
+    /// 測試裡沒被覆寫就大聲失敗，不要偷偷連上真的 Firestore。
+    static let testValue = Self(
+        streamTasks: unimplemented("TodayTasksRepository.streamTasks", placeholder: .never),
+        saveTask: unimplemented("TodayTasksRepository.saveTask"),
+        deleteTask: unimplemented("TodayTasksRepository.deleteTask"),
+        updateTask: unimplemented("TodayTasksRepository.updateTask")
+    )
+    
+    /// SwiftUI 預覽用假資料。
+    static let previewValue = Self(
+        streamTasks: {
+            AsyncStream { continuation in
+                continuation.yield([
+                    TodayTask(id: "t1", title: "整理書桌"),
+                    TodayTask(id: "t2", title: "回信", isDone: true),
+                ])
+            }
+        },
+        saveTask: { _ in },
+        deleteTask: { _ in },
+        updateTask: { _ in }
     )
 }
 

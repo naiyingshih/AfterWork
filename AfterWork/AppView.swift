@@ -12,7 +12,7 @@ struct AppView: View {
     @Bindable var store: StoreOf<AppFeature>
     
     var body: some View {
-        TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
+        TabView(selection: $store.selectedTab) {
             GoalsView(
                 store: store.scope(state: \.goalsFeature, action: \.goal)
             )
@@ -37,6 +37,7 @@ struct AppView: View {
             }
             .tag(AppFeature.Tab.calendar)
         }
+        .task { store.send(.task) }
     }
 }
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E930377303C8EBC00F71B96 /* ARCHITECTURE.md in Resources */ = {isa = PBXBuildFile; fileRef = 0E930376303C8EBC00F71B96 /* ARCHITECTURE.md */; };
 		0EB723E52F6E70DD00DE00FE /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723E42F6E70DD00DE00FE /* FirebaseAnalytics */; };
 		0EB723E72F6E70DD00DE00FE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723E62F6E70DD00DE00FE /* FirebaseCore */; };
 		0EB723E92F6E70DD00DE00FE /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723E82F6E70DD00DE00FE /* FirebaseFirestore */; };
@@ -32,6 +33,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0E930376303C8EBC00F71B96 /* ARCHITECTURE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARCHITECTURE.md; sourceTree = "<group>"; };
 		0ED1AB3C2F24B5E900449576 /* AfterWork.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AfterWork.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ED1AB4D2F24B5F100449576 /* AfterWorkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AfterWorkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ED1AB572F24B5F100449576 /* AfterWorkUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AfterWorkUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,6 +97,7 @@
 		0ED1AB332F24B5E900449576 = {
 			isa = PBXGroup;
 			children = (
+				0E930376303C8EBC00F71B96 /* ARCHITECTURE.md */,
 				0ED1AB3E2F24B5E900449576 /* AfterWork */,
 				0ED1AB502F24B5F100449576 /* AfterWorkTests */,
 				0ED1AB5A2F24B5F100449576 /* AfterWorkUITests */,
@@ -242,6 +245,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E930377303C8EBC00F71B96 /* ARCHITECTURE.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

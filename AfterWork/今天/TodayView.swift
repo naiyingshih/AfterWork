@@ -43,13 +43,13 @@ public struct TodayView: View {
             .navigationBarHidden(true)
             .background(Color.background.edgesIgnoringSafeArea(.all))
             .onAppear {
-                store.send(.onAppear)
+                store.send(.refreshToday)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                store.send(.onAppear)
+                store.send(.refreshToday)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
-                store.send(.onAppear)
+                store.send(.refreshToday)
             }
             .sheet(item: $store.scope(state: \.habitManage, action: \.habitManage)) { hbStore in
                 HabitManageSheet(store: hbStore)
@@ -57,6 +57,7 @@ public struct TodayView: View {
             .sheet(item: $store.scope(state: \.taskSheet, action: \.taskSheet)) { tsStore in
                 TodayTaskSheet(store: tsStore)
             }
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
     
@@ -66,7 +67,7 @@ public struct TodayView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "M月d日 EEEE"
         formatter.locale = Locale(identifier: "zh_Hant_TW")
-        return formatter.string(from: Date())
+        return formatter.string(from: store.today)
     }
     
     private var headerSection: some View {

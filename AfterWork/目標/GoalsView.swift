@@ -24,7 +24,7 @@ struct GoalsView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     
-                    ForEachStore(
+                    ForEach(
                         store.scope(state: \.uncompletedGoals, action: \.goal)
                     ) { goalStore in
                         GoalCardView(store: goalStore)
@@ -44,7 +44,7 @@ struct GoalsView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     
-                    ForEachStore(
+                    ForEach(
                         store.scope(state: \.completedGoals, action: \.goal)
                     ) { goalStore in
                         GoalCardView(store: goalStore)
@@ -60,9 +60,6 @@ struct GoalsView: View {
             .listSectionSpacing(12)
             .animation(.default, value: store.goals)
             .navigationTitle("目標")
-            .onAppear {
-                store.send(.onAppear)
-            }
             .alert($store.scope(state: \.alert, action: \.alert))
         }
         .scrollDismissesKeyboard(.immediately)
@@ -83,12 +80,12 @@ struct GoalsView: View {
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .overlay {
-            if let formStore = store.scope(state: \.goalForm, action: \.goalForm) {
+            if let formStore = store.scope(state: \.goalForm, action: \.goalForm.presented) {
                 ZStack {
                     Color.black.opacity(0.5)
                         .ignoresSafeArea()
                         .onTapGesture {
-                            store.send(.goalForm(.cancelButtonTapped))
+                            store.send(.goalForm(.dismiss))
                         }
                     
                     GoalFormView(store: formStore)

@@ -10,7 +10,8 @@ import FirebaseFirestore
 import ComposableArchitecture
 
 struct HabitsRepository {
-    var fetchHabits: () async throws -> [Habit]
+    /// 持續推播的習慣清單（Firestore snapshot listener）。
+    var streamHabits: () -> AsyncStream<[Habit]>
     var saveHabit: (Habit) async throws -> Void
     var deleteHabit: (Habit.ID) async throws -> Void
     var updateHabit: (Habit) async throws -> Void
@@ -18,11 +19,8 @@ struct HabitsRepository {
 
 extension HabitsRepository: DependencyKey {
     static let liveValue = Self(
-        fetchHabits: {
-            let snapshot = try await Firestore.firestore().collection("habits").getDocuments()
-            return try snapshot.documents.compactMap { doc in
-                try? doc.data(as: Habit.self)
-            }
+        streamHabits: {
+            firestoreCollectionStream("habits", as: Habit.self)
         },
         saveHabit: { habit in
             try await Firestore.firestore()
@@ -37,13 +35,37 @@ extension HabitsRepository: DependencyKey {
                 .delete()
         },
         updateHabit: { habit in
-            var updated = habit
-            updated.updatedTime = Date()
             try await Firestore.firestore()
                 .collection("habits")
-                .document(updated.id)
-                .setData(from: updated)
+                .document(habit.id)
+                .setData(from: habit)
         }
+    )
+}
+
+extension HabitsRepository: TestDependencyKey {
+    /// 測試裡沒被覆寫就大聲失敗，不要偷偷連上真的 Firestore。
+    static let testValue = Self(
+        streamHabits: unimplemented("HabitsRepository.streamHabits", placeholder: .never),
+        saveHabit: unimplemented("HabitsRepository.saveHabit"),
+        deleteHabit: unimplemented("HabitsRepository.deleteHabit"),
+        updateHabit: unimplemented("HabitsRepository.updateHabit")
+    )
+    
+    /// SwiftUI 預覽用假資料。預設會落到 liveValue，那會在沒有 FirebaseApp.configure() 的
+    /// 預覽環境裡直接連線失敗。
+    static let previewValue = Self(
+        streamHabits: {
+            AsyncStream { continuation in
+                continuation.yield([
+                    Habit(id: "h1", title: "跑步", type: .health, streak: 3),
+                    Habit(id: "h2", title: "閱讀", type: .learning, streak: 12),
+                ])
+            }
+        },
+        saveHabit: { _ in },
+        deleteHabit: { _ in },
+        updateHabit: { _ in }
     )
 }
 
