@@ -114,8 +114,10 @@ struct GoalCardView: View {
                                     store.send(.deleteItem(IndexSet(integer: index)))
                                 }
                             } label: {
-                                Label("刪除", systemImage: "trash")
+                                Image(systemName: "trash")
                             }
+                            .accessibilityLabel("刪除")
+                            .tint(Color.destructive)
                         }
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             Button {
@@ -131,12 +133,12 @@ struct GoalCardView: View {
                     }
                 }
                 
-                if store.isAddingItem {
+                if store.local.isAddingItem {
                     HStack {
                         TextField(
                             "輸入細項",
                             text: Binding(
-                                get: { store.newItemTitle },
+                                get: { store.local.newItemTitle },
                                 set: { store.send(.newItemTitleChanged($0)) }
                             )
                         )
@@ -159,7 +161,7 @@ struct GoalCardView: View {
                         }
                         .font(.subheadline)
                         .foregroundColor(Color.main)
-                        .disabled(store.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(store.local.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .buttonStyle(PlainButtonStyle())
                     }
                     .padding(.vertical, 4)

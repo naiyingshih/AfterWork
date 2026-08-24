@@ -10,25 +10,24 @@ import FirebaseFirestore
 import ComposableArchitecture
 
 struct GoalsRepository {
-    var fetchGoals: () async throws -> [Goal]
+    /// 持續推播的目標清單（Firestore snapshot listener）。
+    var streamGoals: () -> AsyncStream<[Goal]>
     var saveGoal: (Goal) async throws -> Void
     var deleteGoal: (Goal.ID) async throws -> Void
-    var updateGoalDetails: (Goal.ID, [GoalItem]) async throws -> Void
+    var updateGoalDetails: (Goal.ID, [GoalItem], Date) async throws -> Void
 }
 
 extension GoalsRepository: DependencyKey {
     static let liveValue = Self(
-        fetchGoals: {
-            let snapshot = try await Firestore.firestore().collection("goals").getDocuments()
-            return try snapshot.documents.map { doc in
-                try doc.data(as: Goal.self)
-            }
+        streamGoals: {
+            firestoreCollectionStream("goals", as: Goal.self)
         },
         saveGoal: { goal in
+            let data = try Firestore.Encoder().encode(goal)
             try await Firestore.firestore()
                 .collection("goals")
                 .document(goal.id)
-                .setData(from: goal)
+                .setData(data)
         },
         deleteGoal: { id in
             try await Firestore.firestore()
@@ -36,7 +35,7 @@ extension GoalsRepository: DependencyKey {
                 .document(id)
                 .delete()
         },
-        updateGoalDetails: { id, details in
+        updateGoalDetails: { id, details, updatedTime in
             // 將陣列轉換成 Data Map 以相容 Firebase SDK 的特定直寫模式
             let encoder = Firestore.Encoder()
             let detailsData = try details.map { try encoder.encode($0) }
@@ -45,9 +44,39 @@ extension GoalsRepository: DependencyKey {
                 .document(id)
                 .updateData([
                     "details": detailsData,
-                    "updatedTime": Date()
+                    "updatedTime": updatedTime
                 ])
         }
+    )
+}
+
+extension GoalsRepository: TestDependencyKey {
+    /// 測試裡沒被覆寫就大聲失敗，不要偷偷連上真的 Firestore。
+    static let testValue = Self(
+        streamGoals: unimplemented("GoalsRepository.streamGoals", placeholder: .never),
+        saveGoal: unimplemented("GoalsRepository.saveGoal"),
+        deleteGoal: unimplemented("GoalsRepository.deleteGoal"),
+        updateGoalDetails: unimplemented("GoalsRepository.updateGoalDetails")
+    )
+    
+    /// SwiftUI 預覽用假資料。
+    static let previewValue = Self(
+        streamGoals: {
+            AsyncStream { continuation in
+                continuation.yield([
+                    Goal(
+                        id: "g1",
+                        title: "讀完一本書",
+                        details: [],
+                        createdTime: Date(timeIntervalSince1970: 1_700_000_000),
+                        updatedTime: Date(timeIntervalSince1970: 1_700_000_000)
+                    )
+                ])
+            }
+        },
+        saveGoal: { _ in },
+        deleteGoal: { _ in },
+        updateGoalDetails: { _, _, _ in }
     )
 }
 

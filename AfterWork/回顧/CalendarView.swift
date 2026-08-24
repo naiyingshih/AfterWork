@@ -45,9 +45,6 @@ struct CalendarView: View {
             }
             .background(Color.background.ignoresSafeArea())
             .navigationTitle("回顧")
-            .onAppear {
-                store.send(.onAppear)
-            }
         }
     }
 }
@@ -174,10 +171,17 @@ struct MonthGridView: View {
     
     var body: some View {
         let days = Self.generateDays(for: month)
+        // 整頁只算一次再分給各格；每格自己去掃全部習慣的話是 42 × N 次比對。
+        let habitTypesByDay = store.habitTypesByDay
+        let calendar = Calendar.current
         LazyVGrid(columns: columns, spacing: CalendarGridMetrics.rowSpacing) {
             ForEach(0..<days.count, id: \.self) { index in
                 if let date = days[index] {
-                    DayCellView(date: date, store: store)
+                    DayCellView(
+                        date: date,
+                        habitTypes: habitTypesByDay[calendar.startOfDay(for: date)] ?? [],
+                        store: store
+                    )
                         .onTapGesture {
                             store.send(.selectDate(date), animation: CalendarAnimation.selectDate)
                         }
@@ -224,6 +228,7 @@ struct MonthGridView: View {
 // MARK: - DayCellView
 struct DayCellView: View {
     let date: Date
+    let habitTypes: Set<HabitType>
     let store: StoreOf<CalendarFeature>
     
     var body: some View {
@@ -241,8 +246,6 @@ struct DayCellView: View {
             
             // Habit dots
             HStack(spacing: 4) {
-                let habitTypes = executedHabitTypes(on: date, habits: Array(store.habits))
-                
                 ForEach(HabitType.allCases, id: \.self) { type in
                     if habitTypes.contains(type) {
                         Circle().fill(type.accentColor).frame(width: 5, height: 5)
@@ -255,17 +258,6 @@ struct DayCellView: View {
             }
         }
         .contentShape(Rectangle())
-    }
-    
-    private func executedHabitTypes(on date: Date, habits: [Habit]) -> Set<HabitType> {
-        let calendar = Calendar.current
-        var types = Set<HabitType>()
-        for habit in habits {
-            if habit.completedDates.contains(where: { calendar.isDate($0, inSameDayAs: date) }) {
-                types.insert(habit.type)
-            }
-        }
-        return types
     }
 }
 

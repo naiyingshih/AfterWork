@@ -43,13 +43,13 @@ public struct TodayView: View {
             .navigationBarHidden(true)
             .background(Color.background.edgesIgnoringSafeArea(.all))
             .onAppear {
-                store.send(.onAppear)
+                store.send(.refreshToday)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                store.send(.onAppear)
+                store.send(.refreshToday)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
-                store.send(.onAppear)
+                store.send(.refreshToday)
             }
             .sheet(item: $store.scope(state: \.habitManage, action: \.habitManage)) { hbStore in
                 HabitManageSheet(store: hbStore)
@@ -57,6 +57,7 @@ public struct TodayView: View {
             .sheet(item: $store.scope(state: \.taskSheet, action: \.taskSheet)) { tsStore in
                 TodayTaskSheet(store: tsStore)
             }
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
     
@@ -66,7 +67,7 @@ public struct TodayView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "M月d日 EEEE"
         formatter.locale = Locale(identifier: "zh_Hant_TW")
-        return formatter.string(from: Date())
+        return formatter.string(from: store.today)
     }
     
     private var headerSection: some View {
@@ -104,12 +105,14 @@ public struct TodayView: View {
                     ForEach(store.habits) { habit in
                         HabitTagView(
                             title: habit.title,
-                            icon: habit.icon,
                             type: habit.type,
                             isCompleted: habit.isCompletedToday,
                             streak: habit.streak,
                             onTap: {
                                 store.send(.toggleHabit(habit), animation: .default)
+                            },
+                            onLongPress: {
+                                store.send(.editHabitButtonTapped(habit))
                             }
                         )
                     }
@@ -180,8 +183,10 @@ public struct TodayView: View {
                 Button(role: .destructive) {
                     store.send(.deleteGoalItem(todayItem), animation: .default)
                 } label: {
-                    Label("刪除", systemImage: "trash")
+                    Image(systemName: "trash")
                 }
+                .accessibilityLabel("刪除")
+                .tint(Color.destructive)
             }
         }
         
@@ -204,8 +209,10 @@ public struct TodayView: View {
                 Button(role: .destructive) {
                     store.send(.deleteTask(task), animation: .default)
                 } label: {
-                    Label("刪除", systemImage: "trash")
+                    Image(systemName: "trash")
                 }
+                .accessibilityLabel("刪除")
+                .tint(Color.destructive)
             }
         }
     }

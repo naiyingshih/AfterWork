@@ -21,7 +21,7 @@ struct AchievementCardView: View {
                 
                 // Section 1: Tasks (TodayTask & GoalItem)
                 VStack(alignment: .leading, spacing: 12) {
-                    let dailyTasks = getTasks(for: selectedDate)
+                    let dailyTasks = store.achievementTasks
                     
                     HStack {
                         ZStack {
@@ -61,7 +61,7 @@ struct AchievementCardView: View {
                 
                 // Section 2: Habits
                 VStack(alignment: .leading, spacing: 12) {
-                    let executedHabits = getExecutedHabits(on: selectedDate)
+                    let executedHabits = store.achievementHabits
                     
                     HStack {
                         ZStack {
@@ -80,17 +80,14 @@ struct AchievementCardView: View {
                     
                     if !executedHabits.isEmpty {
                         WrappingHStack(models: executedHabits) { habit in
-                            HStack(spacing: 4) {
-                                Text(habit.icon)
-                                Text(habit.title)
-                                    .font(.caption)
-                                    .bold()
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .foregroundColor(Color.onFill)
-                            .background(habit.type.fillColor)
-                            .cornerRadius(8)
+                            Text(habit.title)
+                                .font(.caption)
+                                .bold()
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .foregroundColor(Color.onFill)
+                                .background(habit.type.fillColor)
+                                .cornerRadius(8)
                         }
                     } else {
                         Text("無習慣紀錄")
@@ -113,40 +110,7 @@ struct AchievementCardView: View {
         formatter.dateFormat = "M月d日"
         return formatter.string(from: date)
     }
-    
-    // Helper model for unifying Tasks
-    struct UnifiedTask: Identifiable {
-        let id: String
-        let title: String
-        let isDone: Bool
-    }
-    
-    func getTasks(for date: Date) -> [UnifiedTask] {
-        let calendar = Calendar.current
-        var result: [UnifiedTask] = []
-        
-        // 1. Add TodayTasks
-        let specificTasks = store.todayTasks.filter { calendar.isDate($0.createdTime, inSameDayAs: date) }
-        result.append(contentsOf: specificTasks.map { UnifiedTask(id: $0.id, title: $0.title, isDone: $0.isDone) })
-        
-        // 2. Add GoalItems
-        for goal in store.goals {
-            let details = goal.details.filter { item in
-                item.isAddedToToday &&
-                (item.addedToTodayTime != nil && calendar.isDate(item.addedToTodayTime!, inSameDayAs: date))
-            }
-            result.append(contentsOf: details.map { UnifiedTask(id: $0.id, title: $0.title, isDone: $0.isDone) })
-        }
-        
-        return result
-    }
-    
-    func getExecutedHabits(on date: Date) -> [Habit] {
-        let calendar = Calendar.current
-        return store.habits.filter { habit in
-            habit.completedDates.contains(where: { calendar.isDate($0, inSameDayAs: date) })
-        }
-    }
+
 }
 
 // Simple Wrapping HStack for Habit Tags

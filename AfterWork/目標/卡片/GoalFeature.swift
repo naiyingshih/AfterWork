@@ -84,17 +84,17 @@ struct GoalFeature {
                 return .send(.delegate(.updateGoalDetails(state.id, state.details)))
                 
             case .addItemButtonTapped:
-                state.isAddingItem = true
-                state.newItemTitle = ""
+                state.local.isAddingItem = true
+                state.local.newItemTitle = ""
                 return .none
 
             case let .newItemTitleChanged(text):
-                state.newItemTitle = text
+                state.local.newItemTitle = text
                 return .none
                 
             case .saveItemButtonTapped:
-                if state.isAddingItem {
-                    let title = state.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                if state.local.isAddingItem {
+                    let title = state.local.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !title.isEmpty else { return .none }
 
                     let newItem = GoalItem(
@@ -110,8 +110,8 @@ struct GoalFeature {
                     state.details.append(newItem)
                     sortDetails(&state)
 
-                    state.isAddingItem = false
-                    state.newItemTitle = ""
+                    state.local.isAddingItem = false
+                    state.local.newItemTitle = ""
                     state.updatedTime = date()
 
                     return .send(.delegate(.updateGoalDetails(state.id, state.details)))
@@ -119,8 +119,8 @@ struct GoalFeature {
                 return .none
                 
             case .cancelItemButtonTapped:
-                state.isAddingItem = false
-                state.newItemTitle = ""
+                state.local.isAddingItem = false
+                state.local.newItemTitle = ""
                 return .none
                 
             case let .moveItems(source, destination):

@@ -12,10 +12,9 @@ import Foundation
 struct GoalFormFeature {
     @ObservableState
     struct State: Equatable {
-        var id: String = UUID().uuidString
         var title: String = ""
         var description: String = ""
-        var targetDate: Date = Date()
+        var targetDate: Date
         var mode: Mode
         
         enum Mode: Equatable {
@@ -24,9 +23,10 @@ struct GoalFormFeature {
         }
         
         init(mode: Mode = .add) {
+            @Dependency(\.date.now) var now
             self.mode = mode
+            self.targetDate = now
             if case let .edit(goal) = mode {
-                self.id = goal.id
                 self.title = goal.title
                 self.description = goal.description ?? ""
                 if let date = goal.targetDate {
@@ -62,7 +62,7 @@ struct GoalFormFeature {
                 switch state.mode {
                 case .add:
                     goal = Goal(
-                        id: state.id,
+                        id: uuid().uuidString,
                         title: state.title,
                         description: state.description,
                         targetDate: state.targetDate,

@@ -13,10 +13,10 @@ struct GoalsFeature {
     
     @ObservableState
     struct State: Equatable {
+        /// 由 AppFeature 的 Firestore listener 餵進來（forEach 需要可寫入的儲存屬性，接不上 @Shared）。
         var goals: IdentifiedArrayOf<Goal> = []
-        var goalForm: GoalFormFeature.State?
+        @Presents var goalForm: GoalFormFeature.State?
         @Presents var alert: AlertState<Action.Alert>?
-        var isLoading: Bool = false
         
         var uncompletedGoals: IdentifiedArrayOf<Goal> {
             let filtered = goals.filter { $0.progress < 1.0 }
@@ -45,12 +45,13 @@ struct GoalsFeature {
     }
     
     enum Action {
-        case onAppear
-        case goalsLoaded([Goal])
         case addGoalButtonTapped
-        case goalForm(GoalFormFeature.Action)
+        case goalForm(PresentationAction<GoalFormFeature.Action>)
         case goal(IdentifiedActionOf<GoalFeature>)
         case alert(PresentationAction<Alert>)
+        
+        /// 寫入雲端失敗。一定要讓使用者看到，否則 Firestore 回滾之後畫面會無聲跳回舊值。
+        case writeFailed(any Error)
         
         enum Alert: Equatable {
             case confirmDelete(Goal.ID)
@@ -58,43 +59,25 @@ struct GoalsFeature {
     }
     
     @Dependency(\.goalsRepository) var goalsRepository
+    @Dependency(\.date.now) var now
     
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
-                state.isLoading = true
-                return .run { send in
-                    do {
-                        let goals = try await goalsRepository.fetchGoals()
-                        await send(.goalsLoaded(goals))
-                    } catch {
-                        print("Failed to load goals: \(error)")
-                        await send(.goalsLoaded([]))
-                    }
-                }
-                
-            case let .goalsLoaded(loadedGoals):
-                state.goals = IdentifiedArrayOf(uniqueElements: loadedGoals.sorted(by: State.sortGoals))
-                state.isLoading = false
-                return .none
-                
             case .addGoalButtonTapped:
                 state.goalForm = GoalFormFeature.State(mode: .add)
                 return .none
                 
-            case let .goalForm(.delegate(.saveGoal(goal))):
+            case let .goalForm(.presented(.delegate(.saveGoal(goal)))):
                 state.goals.updateOrAppend(goal)
                 state.goalForm = nil
                 return .run { _ in
-                    do {
-                        try await goalsRepository.saveGoal(goal)
-                    } catch {
-                        print("Save goal failed: \(error)")
-                    }
+                    try await goalsRepository.saveGoal(goal)
+                } catch: { error, send in
+                    await send(.writeFailed(error))
                 }
                 
-            case .goalForm(.cancelButtonTapped):
+            case .goalForm(.presented(.cancelButtonTapped)):
                 state.goalForm = nil
                 return .none
                 
@@ -104,22 +87,18 @@ struct GoalsFeature {
             case let .goal(.element(id: id, action: .delegate(.saveGoal(goal)))):
                 state.goals[id: id] = goal
                 return .run { _ in
-                    do {
-                        try await goalsRepository.saveGoal(goal)
-                    } catch {
-                        print("Save goal details failed: \(error)")
-                    }
+                    try await goalsRepository.saveGoal(goal)
+                } catch: { error, send in
+                    await send(.writeFailed(error))
                 }
                 
             case let .goal(.element(id: id, action: .delegate(.updateGoalDetails(goalId, details)))):
                 state.goals[id: id]?.details = details
-                state.goals[id: id]?.updatedTime = Date()
-                return .run { _ in
-                    do {
-                        try await goalsRepository.updateGoalDetails(goalId, Array(details))
-                    } catch {
-                        print("Update goal items failed: \(error)")
-                    }
+                state.goals[id: id]?.updatedTime = now
+                return .run { [now] _ in
+                    try await goalsRepository.updateGoalDetails(goalId, Array(details), now)
+                } catch: { error, send in
+                    await send(.writeFailed(error))
                 }
                 
             case let .goal(.element(id: id, action: .delegate(.editGoal(goal)))):
@@ -142,21 +121,23 @@ struct GoalsFeature {
             case .goal:
                 return .none
                 
+            case let .writeFailed(error):
+                state.alert = .writeFailed(error)
+                return .none
+                
             case .alert(.dismiss):
                 return .none
                 
             case let .alert(.presented(.confirmDelete(id))):
                 state.goals.remove(id: id)
                 return .run { _ in
-                    do {
-                        try await goalsRepository.deleteGoal(id)
-                    } catch {
-                        print("Delete goal failed: \(error)")
-                    }
+                    try await goalsRepository.deleteGoal(id)
+                } catch: { error, send in
+                    await send(.writeFailed(error))
                 }
             }
         }
-        .ifLet(\.goalForm, action: \.goalForm) {
+        .ifLet(\.$goalForm, action: \.goalForm) {
             GoalFormFeature()
         }
         .ifLet(\.$alert, action: \.alert)

@@ -11,7 +11,7 @@ import ComposableArchitecture
 
 /// 目標
 @ObservableState
-struct Goal: Equatable, Identifiable, Codable {
+struct Goal: Equatable, Identifiable, Codable, Sendable {
     typealias ID = String
     /// ID
     let id: String
@@ -88,17 +88,25 @@ struct Goal: Equatable, Identifiable, Codable {
     }
     
     // MARK: 自訂
-    /// 是否顯示新增細項輸入列
-    var isAddingItem: Bool = false
-    /// 新增細項輸入內容
-    var newItemTitle: String = ""
-    /// 記憶本地展開狀態以觸發畫面機制 (Optional 屬性享有 Swift 免宣告豁免權，不用寫入任何 init)
-    var _localExpandedState: Bool?
+    /// 只存在本地、不會寫進 Firestore 的編輯狀態。
+    ///
+    /// 收成一包是為了讓 AppFeature 收到 listener 推播時可以整包接回去（`goal.local = previous.local`）。
+    /// 以前是逐欄保留，之後有人加新欄位卻忘了加進保留清單，症狀會是
+    /// 「使用者打到一半的字被遠端推播洗掉」—— 很難查。收成一包就不可能漏。
+    struct LocalEditing: Equatable, Sendable {
+        /// 是否顯示新增細項輸入列
+        var isAddingItem: Bool = false
+        /// 新增細項輸入內容
+        var newItemTitle: String = ""
+        /// 記憶展開狀態以觸發畫面機制 (Optional 屬性享有 Swift 免宣告豁免權，不用寫入任何 init)
+        var expanded: Bool?
+    }
+    var local = LocalEditing()
     /// 是否展開
     var isExpanded: Bool {
-        get { _localExpandedState ?? UserInfoManager.shared.isGoalExpanded(for: id, default: details.isEmpty) }
+        get { local.expanded ?? UserInfoManager.shared.isGoalExpanded(for: id, default: details.isEmpty) }
         set {
-            _localExpandedState = newValue
+            local.expanded = newValue
             UserInfoManager.shared.setGoalExpanded(newValue, for: id)
         }
     }
@@ -113,7 +121,7 @@ struct Goal: Equatable, Identifiable, Codable {
 }
 
 /// 目標 - 細項
-struct GoalItem: Equatable, Identifiable, Codable {
+struct GoalItem: Equatable, Identifiable, Codable, Sendable {
     /// ID
     let id: String
     /// 細項標題
