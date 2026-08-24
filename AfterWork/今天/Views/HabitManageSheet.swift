@@ -29,7 +29,6 @@ public struct HabitManageSheet: View {
             Form {
                 Section {
                     TextField("習慣名稱", text: $store.habit.title)
-                    TextField("Icon (e.g. 🧘)", text: $store.habit.icon)
                 } header: {
                     Text("基本設定")
                         .foregroundColor(Color.labelSecondary)
@@ -102,7 +101,7 @@ public struct HabitManageSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.background)
-            .navigationTitle("習慣管理")
+            .navigationTitle(store.isEditing ? "編輯習慣" : "新增習慣")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

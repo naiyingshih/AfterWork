@@ -80,17 +80,14 @@ struct AchievementCardView: View {
                     
                     if !executedHabits.isEmpty {
                         WrappingHStack(models: executedHabits) { habit in
-                            HStack(spacing: 4) {
-                                Text(habit.icon)
-                                Text(habit.title)
-                                    .font(.caption)
-                                    .bold()
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .foregroundColor(Color.onFill)
-                            .background(habit.type.fillColor)
-                            .cornerRadius(8)
+                            Text(habit.title)
+                                .font(.caption)
+                                .bold()
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .foregroundColor(Color.onFill)
+                                .background(habit.type.fillColor)
+                                .cornerRadius(8)
                         }
                     } else {
                         Text("無習慣紀錄")

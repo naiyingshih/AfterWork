@@ -42,7 +42,7 @@ extension HabitsRepository: DependencyKey {
             try await Firestore.firestore()
                 .collection("habits")
                 .document(updated.id)
-                .setData(from: updated, merge: true)
+                .setData(from: updated)
         }
     )
 }

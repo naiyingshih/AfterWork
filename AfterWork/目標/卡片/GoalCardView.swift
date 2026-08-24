@@ -114,8 +114,10 @@ struct GoalCardView: View {
                                     store.send(.deleteItem(IndexSet(integer: index)))
                                 }
                             } label: {
-                                Label("刪除", systemImage: "trash")
+                                Image(systemName: "trash")
                             }
+                            .accessibilityLabel("刪除")
+                            .tint(Color.destructive)
                         }
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             Button {

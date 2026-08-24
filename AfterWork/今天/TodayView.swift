@@ -104,12 +104,14 @@ public struct TodayView: View {
                     ForEach(store.habits) { habit in
                         HabitTagView(
                             title: habit.title,
-                            icon: habit.icon,
                             type: habit.type,
                             isCompleted: habit.isCompletedToday,
                             streak: habit.streak,
                             onTap: {
                                 store.send(.toggleHabit(habit), animation: .default)
+                            },
+                            onLongPress: {
+                                store.send(.editHabitButtonTapped(habit))
                             }
                         )
                     }
@@ -180,8 +182,10 @@ public struct TodayView: View {
                 Button(role: .destructive) {
                     store.send(.deleteGoalItem(todayItem), animation: .default)
                 } label: {
-                    Label("刪除", systemImage: "trash")
+                    Image(systemName: "trash")
                 }
+                .accessibilityLabel("刪除")
+                .tint(Color.destructive)
             }
         }
         
@@ -204,8 +208,10 @@ public struct TodayView: View {
                 Button(role: .destructive) {
                     store.send(.deleteTask(task), animation: .default)
                 } label: {
-                    Label("刪除", systemImage: "trash")
+                    Image(systemName: "trash")
                 }
+                .accessibilityLabel("刪除")
+                .tint(Color.destructive)
             }
         }
     }
