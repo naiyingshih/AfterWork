@@ -50,7 +50,7 @@ struct CalendarFeature {
                 .map { AchievementTask(id: $0.id, title: $0.title, isDone: $0.isDone) }
             
             for goal in allGoals {
-                for detail in goal.details where detail.isAddedToToday {
+                for detail in goal.details {
                     guard let addedTime = detail.addedToTodayTime,
                           calendar.isDate(addedTime, inSameDayAs: selectedDate) else { continue }
                     result.append(

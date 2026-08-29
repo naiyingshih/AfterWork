@@ -34,6 +34,7 @@ struct GoalFormView: View {
                 .listRowBackground(Color.card)
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .background(Color.background)
             .navigationTitle(store.mode == .add ? "新增目標" : "編輯目標")
             .navigationBarTitleDisplayMode(.inline)

@@ -32,7 +32,7 @@ struct GoalFeature {
             case saveGoal(Goal)
             case editGoal(Goal)
             case deleteGoal(Goal.ID)
-            case updateGoalDetails(Goal.ID, IdentifiedArrayOf<GoalItem>)
+            case updateGoalDetails(Goal)
         }
     }
     
@@ -55,33 +55,25 @@ struct GoalFeature {
                 state.details[id: id] = item
                 state.updatedTime = date()
                 
-                sortDetails(&state)
+                state.sortDetails()
+                state.syncFinishDate(now: date())
                 
-                if state.progress == 1.0 {
-                    if state.finishDate == nil {
-                        state.finishDate = date()
-                    }
+                if state.isCompleted {
                     state.isExpanded = false
-                } else {
-                    state.finishDate = nil
                 }
                 
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case let .deleteItem(indexSet):
                 state.details.remove(atOffsets: indexSet)
                 state.updatedTime = date()
+                state.syncFinishDate(now: date())
                 
-                if state.progress == 1.0 && !state.details.isEmpty {
-                    if state.finishDate == nil {
-                        state.finishDate = date()
-                    }
+                if state.isCompleted {
                     state.isExpanded = false
-                } else {
-                    state.finishDate = nil
                 }
                 
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case .addItemButtonTapped:
                 state.local.isAddingItem = true
@@ -101,20 +93,20 @@ struct GoalFeature {
                         id: uuid().uuidString,
                         title: title,
                         isDone: false,
-                        isAddedToToday: false,
                         addedToTodayTime: nil,
                         order: state.details.count,
                         createdTime: date(),
                         updatedTime: date()
                     )
                     state.details.append(newItem)
-                    sortDetails(&state)
+                    state.sortDetails()
+                    state.syncFinishDate(now: date())
 
                     state.local.isAddingItem = false
                     state.local.newItemTitle = ""
                     state.updatedTime = date()
 
-                    return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                    return .send(.delegate(.updateGoalDetails(state)))
                 }
                 return .none
                 
@@ -130,16 +122,15 @@ struct GoalFeature {
                     items[index].order = index
                 }
                 state.details = IdentifiedArrayOf(uniqueElements: items)
-                sortDetails(&state)
+                state.sortDetails()
                 
                 state.updatedTime = date()
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case let .addToToday(id):
-                state.details[id: id]?.isAddedToToday = true
                 state.details[id: id]?.addedToTodayTime = date()
                 state.updatedTime = date()
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case .editGoalTapped:
                 return .send(.delegate(.editGoal(state)))
@@ -151,19 +142,5 @@ struct GoalFeature {
                 return .none
             }
         }
-    }
-    
-    private func sortDetails(_ state: inout State) {
-        var items = Array(state.details)
-        items.sort {
-            if $0.isDone == $1.isDone {
-                return $0.order < $1.order
-            }
-            return !$0.isDone && $1.isDone
-        }
-        for index in items.indices {
-            items[index].order = index
-        }
-        state.details = IdentifiedArray(uniqueElements: items)
     }
 }

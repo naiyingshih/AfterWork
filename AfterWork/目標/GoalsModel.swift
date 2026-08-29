@@ -118,6 +118,43 @@ struct Goal: Equatable, Identifiable, Codable, Sendable {
         
         return Double(done) / Double(details.count)
     }
+    /// 是否完成。以 `finishDate` 為準，它是雲端上唯一的完成事實。
+    var isCompleted: Bool {
+        finishDate != nil
+    }
+    /// 細項是否全部勾完。沒有細項的目標不算完成，不然新建的空目標一開頭就在已完成區。
+    private var isAllDetailsDone: Bool {
+        !details.isEmpty && details.allSatisfy(\.isDone)
+    }
+    
+    /// 依細項的完成狀態決定 `finishDate`：全部勾完就蓋上完成日，只要有一項退回未完成就清掉。
+    mutating func syncFinishDate(now: Date) {
+        guard isAllDetailsDone else {
+            finishDate = nil
+            return
+        }
+        if finishDate == nil {
+            finishDate = now
+        }
+    }
+    
+    /// 依「未完成在前、已完成在後」重排細項，並把 `order` 重新編號成連續值。
+    /// 
+    /// 勾選細項有兩個入口 -
+    /// 目標分頁的 `GoalFeature.itemChecked`、今天分頁的 `TodayFeature.toggleGoalItem`
+    mutating func sortDetails() {
+        var items = Array(details)
+        items.sort {
+            if $0.isDone == $1.isDone {
+                return $0.order < $1.order
+            }
+            return !$0.isDone && $1.isDone
+        }
+        for index in items.indices {
+            items[index].order = index
+        }
+        details = IdentifiedArray(uniqueElements: items)
+    }
 }
 
 /// 目標 - 細項
@@ -128,9 +165,7 @@ struct GoalItem: Equatable, Identifiable, Codable, Sendable {
     var title: String
     /// 是否完成
     var isDone: Bool
-    /// 是否加入今日
-    var isAddedToToday: Bool
-    /// 加入今日的時間
+    /// 加入今日的時間。nil 代表沒被拉進今天分頁
     var addedToTodayTime: Date?
     /// 順序
     var order: Int

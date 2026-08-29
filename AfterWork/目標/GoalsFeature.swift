@@ -19,15 +19,16 @@ struct GoalsFeature {
         @Presents var alert: AlertState<Action.Alert>?
         
         var uncompletedGoals: IdentifiedArrayOf<Goal> {
-            let filtered = goals.filter { $0.progress < 1.0 }
+            let filtered = goals.filter { !$0.isCompleted }
             return IdentifiedArray(uniqueElements: filtered.sorted(by: Self.sortGoals))
         }
         
         var completedGoals: IdentifiedArrayOf<Goal> {
-            let filtered = goals.filter { $0.progress == 1.0 }
-            return IdentifiedArray(uniqueElements: filtered.sorted(by: Self.sortGoals))
+            let filtered = goals.filter { $0.isCompleted }
+            return IdentifiedArray(uniqueElements: filtered.sorted(by: Self.sortCompletedGoals))
         }
         
+        /// 未完成：預計完成日近的排前面，沒有預計完成日的排最後。
         static func sortGoals(_ goal1: Goal, _ goal2: Goal) -> Bool {
             if let d1 = goal1.targetDate, let d2 = goal2.targetDate {
                 if d1 == d2 {
@@ -41,6 +42,17 @@ struct GoalsFeature {
             } else {
                 return goal1.createdTime > goal2.createdTime
             }
+        }
+        
+        /// 已完成：完成日越新排越上面。
+        static func sortCompletedGoals(_ goal1: Goal, _ goal2: Goal) -> Bool {
+            // completedGoals 濾的條件就是「有完成日」，這裡的 nil 不會發生。
+            let date1 = goal1.finishDate ?? .distantPast
+            let date2 = goal2.finishDate ?? .distantPast
+            if date1 == date2 {
+                return goal1.createdTime > goal2.createdTime
+            }
+            return date1 > date2
         }
     }
     
@@ -59,7 +71,6 @@ struct GoalsFeature {
     }
     
     @Dependency(\.goalsRepository) var goalsRepository
-    @Dependency(\.date.now) var now
     
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -92,11 +103,10 @@ struct GoalsFeature {
                     await send(.writeFailed(error))
                 }
                 
-            case let .goal(.element(id: id, action: .delegate(.updateGoalDetails(goalId, details)))):
-                state.goals[id: id]?.details = details
-                state.goals[id: id]?.updatedTime = now
-                return .run { [now] _ in
-                    try await goalsRepository.updateGoalDetails(goalId, Array(details), now)
+            case let .goal(.element(id: _, action: .delegate(.updateGoalDetails(goal)))):
+                // forEach 是就地改子狀態，goal 就是 state.goals 裡那一筆，這裡只負責寫回雲端。
+                return .run { _ in
+                    try await goalsRepository.updateGoalDetails(goal)
                 } catch: { error, send in
                     await send(.writeFailed(error))
                 }

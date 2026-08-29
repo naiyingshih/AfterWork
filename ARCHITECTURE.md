@@ -191,7 +191,7 @@ struct Goal {
 
 ### 時間與 id 的規則
 
-**會被寫進資料的，一律走 dependency。** Repository 只做 I/O，不再自己補 `updatedTime`（以前會，導致本地 state 與雲端的時間戳不一致）；時間由 reducer 設好再交出去，`updateGoalDetails` 因此也多收一個 `Date` 參數。
+**會被寫進資料的，一律走 dependency。** Repository 只做 I/O，不再自己補 `updatedTime`（以前會，導致本地 state 與雲端的時間戳不一致）；時間由 reducer 設好再交出去，`updateGoalDetails` 因此直接收整個 `Goal`（reducer 已經把 `updatedTime`、`finishDate` 設好），只寫回 `details` / `finishDate` / `updatedTime` 三個欄位。
 
 **例外：State 的預設值。** `TodayFeature.today`、`CalendarFeature.selectedDate` / `currentMonth` 仍然用 `Date()`。它們是「畫面初始停在哪」的種子值，不是會被持久化的資料。改成讀 dependency 的話，測試裡建 `AppFeature.State()` 就會踩到未實作的 `date` 而失敗。測試要控時間直接指定這些欄位即可。
 
@@ -234,6 +234,8 @@ struct Goal {
 | `TodayCalendarSyncTests` | 今天分頁勾任務／勾習慣後，回顧分頁**當下**就是新的；寫入失敗會跳提示而不是無聲回滾 |
 | `AppFeatureStreamTests` | Firestore 推播會灌進共享狀態讓兩個分頁一起看到；目標推播不會洗掉正在輸入中的細項 |
 | `CalendarDerivedStateTests` | 成就卡與日曆圓點的衍生邏輯（這幾段以前寫在 View 裡，完全測不到） |
+| `GoalItemSortingTests` | 細項兩個勾選入口（目標分頁、今天分頁）排出來的順序一致；今天分頁自己的清單不會跟著跳位 |
+| `GoalFinishDateTests` | 勾完最後一項才蓋上完成日、退回未完成就清掉，兩個入口都會寫進雲端；已完成／未完成分組看的是完成日 |
 
 寫測試時：
 
@@ -261,4 +263,4 @@ xcodebuild -project AfterWork.xcodeproj -scheme AfterWork \
 **未來工作**
 
 - `Goal.isExpanded` 的 getter/setter 直接讀寫 `UserInfoManager.shared`（UserDefaults）。一個 Codable 的 Firestore 模型不該碰 UserDefaults，而且這條路徑在測試裡不可覆寫。要處理時建議連同上面的 `GoalFeature.State` 一起搬。
-- `GoalsView` 的 `store.scope(state: \.uncompletedGoals, …)` 指向會 filter + sort 的計算屬性。能動，但目標一達 100% 就會從「未完成」跳到「已完成」段，element store 的身分靠 id 維持，動畫可能會抖。
+- `GoalsView` 的 `store.scope(state: \.uncompletedGoals, …)` 指向會 filter + sort 的計算屬性。能動，但目標一完成就會從「未完成」跳到「已完成」段，element store 的身分靠 id 維持，動畫可能會抖。
