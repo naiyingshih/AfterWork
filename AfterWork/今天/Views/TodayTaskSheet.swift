@@ -33,7 +33,9 @@ public struct TodayTaskSheet: View {
                 Spacer()
             }
             .padding(.horizontal, 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.background)
+            .hideKeyboardOnTap()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

@@ -62,7 +62,7 @@ struct GoalsView: View {
             .navigationTitle("目標")
             .alert($store.scope(state: \.alert, action: \.alert))
         }
-        .scrollDismissesKeyboard(.immediately)
+        .scrollDismissesKeyboard(.interactively)
         .overlay(alignment: .bottomTrailing) {
             Button {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)

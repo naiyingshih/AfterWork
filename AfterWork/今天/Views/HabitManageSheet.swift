@@ -70,6 +70,7 @@ public struct HabitManageSheet: View {
                 .listRowBackground(Color.card)
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .background(Color.background)
             .navigationTitle(store.isEditing ? "編輯習慣" : "新增習慣")
             .navigationBarTitleDisplayMode(.inline)
