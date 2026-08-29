@@ -56,13 +56,13 @@ struct GoalItemSortingTests {
     @Test func 從今天分頁勾選細項會把它排到目標細項的最後面() async {
         let now = Self.now
         let todayState = Self.todayState(with: Self.threeItemGoal)
-        let written = LockIsolated<[GoalItem]>([])
+        let written = LockIsolated<Goal?>(nil)
         
         let store = TestStore(initialState: todayState) {
             TodayFeature()
         } withDependencies: {
             $0.date = .constant(now)
-            $0.goalsRepository.updateGoalDetails = { _, details, _ in written.setValue(details) }
+            $0.goalsRepository.updateGoalDetails = { written.setValue($0) }
         }
         store.exhaustivity = .off
         
@@ -73,7 +73,7 @@ struct GoalItemSortingTests {
         #expect(details.map(\.id) == ["b", "c", "a"])
         #expect(details.map(\.order) == [0, 1, 2])
         // 新順序要真的寫進 Firestore，目標分頁才會在 listener 推回來時看到同一份。
-        #expect(written.value.map(\.id) == ["b", "c", "a"])
+        #expect(written.value?.details.map(\.id) == ["b", "c", "a"])
     }
     
     @Test func 兩個分頁勾選同一個細項排出來的順序一樣() async {
@@ -92,7 +92,7 @@ struct GoalItemSortingTests {
             TodayFeature()
         } withDependencies: {
             $0.date = .constant(now)
-            $0.goalsRepository.updateGoalDetails = { _, _, _ in }
+            $0.goalsRepository.updateGoalDetails = { _ in }
         }
         todayStore.exhaustivity = .off
         await todayStore.send(.toggleGoalItem(todayState.goalItems[id: "a"]!))
@@ -113,7 +113,7 @@ struct GoalItemSortingTests {
             TodayFeature()
         } withDependencies: {
             $0.date = .constant(now)
-            $0.goalsRepository.updateGoalDetails = { _, _, _ in }
+            $0.goalsRepository.updateGoalDetails = { _ in }
         }
         store.exhaustivity = .off
         

@@ -14,7 +14,8 @@ struct GoalsRepository {
     var streamGoals: () -> AsyncStream<[Goal]>
     var saveGoal: (Goal) async throws -> Void
     var deleteGoal: (Goal.ID) async throws -> Void
-    var updateGoalDetails: (Goal.ID, [GoalItem], Date) async throws -> Void
+    /// 勾選／增刪細項後寫回雲端： details、finishDate、updatedTime 三個欄位
+    var updateGoalDetails: (Goal) async throws -> Void
 }
 
 extension GoalsRepository: DependencyKey {
@@ -35,17 +36,24 @@ extension GoalsRepository: DependencyKey {
                 .document(id)
                 .delete()
         },
-        updateGoalDetails: { id, details, updatedTime in
+        updateGoalDetails: { goal in
             // 將陣列轉換成 Data Map 以相容 Firebase SDK 的特定直寫模式
             let encoder = Firestore.Encoder()
-            let detailsData = try details.map { try encoder.encode($0) }
+            let detailsData = try goal.details.map { try encoder.encode($0) }
+            var data: [String: Any] = [
+                "details": detailsData,
+                "updatedTime": goal.updatedTime
+            ]
+            // 退回未完成時把完成日欄位刪掉
+            if let finishDate = goal.finishDate {
+                data["finishDate"] = finishDate
+            } else {
+                data["finishDate"] = FieldValue.delete()
+            }
             try await Firestore.firestore()
                 .collection("goals")
-                .document(id)
-                .updateData([
-                    "details": detailsData,
-                    "updatedTime": updatedTime
-                ])
+                .document(goal.id)
+                .updateData(data)
         }
     )
 }
@@ -76,7 +84,7 @@ extension GoalsRepository: TestDependencyKey {
         },
         saveGoal: { _ in },
         deleteGoal: { _ in },
-        updateGoalDetails: { _, _, _ in }
+        updateGoalDetails: { _ in }
     )
 }
 

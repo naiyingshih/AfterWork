@@ -32,7 +32,7 @@ struct GoalFeature {
             case saveGoal(Goal)
             case editGoal(Goal)
             case deleteGoal(Goal.ID)
-            case updateGoalDetails(Goal.ID, IdentifiedArrayOf<GoalItem>)
+            case updateGoalDetails(Goal)
         }
     }
     
@@ -56,32 +56,24 @@ struct GoalFeature {
                 state.updatedTime = date()
                 
                 state.sortDetails()
+                state.syncFinishDate(now: date())
                 
-                if state.progress == 1.0 {
-                    if state.finishDate == nil {
-                        state.finishDate = date()
-                    }
+                if state.isCompleted {
                     state.isExpanded = false
-                } else {
-                    state.finishDate = nil
                 }
                 
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case let .deleteItem(indexSet):
                 state.details.remove(atOffsets: indexSet)
                 state.updatedTime = date()
+                state.syncFinishDate(now: date())
                 
-                if state.progress == 1.0 && !state.details.isEmpty {
-                    if state.finishDate == nil {
-                        state.finishDate = date()
-                    }
+                if state.isCompleted {
                     state.isExpanded = false
-                } else {
-                    state.finishDate = nil
                 }
                 
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case .addItemButtonTapped:
                 state.local.isAddingItem = true
@@ -109,12 +101,13 @@ struct GoalFeature {
                     )
                     state.details.append(newItem)
                     state.sortDetails()
+                    state.syncFinishDate(now: date())
 
                     state.local.isAddingItem = false
                     state.local.newItemTitle = ""
                     state.updatedTime = date()
 
-                    return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                    return .send(.delegate(.updateGoalDetails(state)))
                 }
                 return .none
                 
@@ -133,13 +126,13 @@ struct GoalFeature {
                 state.sortDetails()
                 
                 state.updatedTime = date()
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case let .addToToday(id):
                 state.details[id: id]?.isAddedToToday = true
                 state.details[id: id]?.addedToTodayTime = date()
                 state.updatedTime = date()
-                return .send(.delegate(.updateGoalDetails(state.id, state.details)))
+                return .send(.delegate(.updateGoalDetails(state)))
                 
             case .editGoalTapped:
                 return .send(.delegate(.editGoal(state)))

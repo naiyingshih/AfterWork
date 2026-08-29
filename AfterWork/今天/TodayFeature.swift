@@ -46,10 +46,8 @@ struct TodayFeature {
         
         /// 今天從目標拉進來的細項。
         ///
-        /// 同一個目標底下用「加入今日的時間」排，不跟著 `goal.details` 的順序走：
+        /// 同一個目標底下用「加入今日的時間」排
         /// 細項一勾完就會被 `Goal.sortDetails()` 排到目標卡片的最後面，
-        /// 這裡若照著它的順序讀，使用者在今天分頁按下勾選，卡片會當場往下跳，
-        /// 跟旁邊自建任務（勾完留在原位）的行為對不起來。
         var goalItems: IdentifiedArrayOf<TodayGoalItem> {
             let calendar = Calendar.current
             var items: [TodayGoalItem] = []
@@ -159,16 +157,16 @@ struct TodayFeature {
                 newItem.updatedTime = now
                 state.$allGoals.withLock {
                     $0[id: todayItem.goalId]?.details[id: todayItem.id] = newItem
-                    // 跟目標分頁的 itemChecked 用同一套規則把已完成的細項排到最後，
-                    // 新的順序會跟著下面的 updateGoalDetails 寫進 Firestore，
-                    // 目標分頁才會在 listener 推回來時看到一樣的排序。
+                    // 跟目標分頁的 itemChecked 用同一套規則把已完成的細項排到最後
                     $0[id: todayItem.goalId]?.sortDetails()
+                    // 勾完最後一項就蓋上完成日、取消勾選就清掉，跟目標分頁同一套規則。
+                    $0[id: todayItem.goalId]?.syncFinishDate(now: now)
                     $0[id: todayItem.goalId]?.updatedTime = now
                 }
                 
-                guard let details = state.allGoals[id: todayItem.goalId]?.details else { return .none }
-                return .run { [goalId = todayItem.goalId, details, now] _ in
-                    try await goalsRepository.updateGoalDetails(goalId, Array(details), now)
+                guard let goal = state.allGoals[id: todayItem.goalId] else { return .none }
+                return .run { [goal] _ in
+                    try await goalsRepository.updateGoalDetails(goal)
                 } catch: { error, send in
                     await send(.writeFailed(error))
                 }
@@ -191,9 +189,9 @@ struct TodayFeature {
                     $0[id: todayItem.goalId]?.updatedTime = now
                 }
                 
-                guard let details = state.allGoals[id: todayItem.goalId]?.details else { return .none }
-                return .run { [goalId = todayItem.goalId, details, now] _ in
-                    try await goalsRepository.updateGoalDetails(goalId, Array(details), now)
+                guard let goal = state.allGoals[id: todayItem.goalId] else { return .none }
+                return .run { [goal] _ in
+                    try await goalsRepository.updateGoalDetails(goal)
                 } catch: { error, send in
                     await send(.writeFailed(error))
                 }
