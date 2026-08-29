@@ -118,6 +118,24 @@ struct Goal: Equatable, Identifiable, Codable, Sendable {
         
         return Double(done) / Double(details.count)
     }
+    /// 依「未完成在前、已完成在後」重排細項，並把 `order` 重新編號成連續值。
+    ///
+    /// 排序規則
+    /// 勾選細項有兩個入口 -
+    /// 目標分頁的 `GoalFeature.itemChecked`、今天分頁的 `TodayFeature.toggleGoalItem`
+    mutating func sortDetails() {
+        var items = Array(details)
+        items.sort {
+            if $0.isDone == $1.isDone {
+                return $0.order < $1.order
+            }
+            return !$0.isDone && $1.isDone
+        }
+        for index in items.indices {
+            items[index].order = index
+        }
+        details = IdentifiedArray(uniqueElements: items)
+    }
 }
 
 /// 目標 - 細項

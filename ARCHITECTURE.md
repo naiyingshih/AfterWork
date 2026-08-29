@@ -234,6 +234,7 @@ struct Goal {
 | `TodayCalendarSyncTests` | 今天分頁勾任務／勾習慣後，回顧分頁**當下**就是新的；寫入失敗會跳提示而不是無聲回滾 |
 | `AppFeatureStreamTests` | Firestore 推播會灌進共享狀態讓兩個分頁一起看到；目標推播不會洗掉正在輸入中的細項 |
 | `CalendarDerivedStateTests` | 成就卡與日曆圓點的衍生邏輯（這幾段以前寫在 View 裡，完全測不到） |
+| `GoalItemSortingTests` | 細項兩個勾選入口（目標分頁、今天分頁）排出來的順序一致；今天分頁自己的清單不會跟著跳位 |
 
 寫測試時：
 

@@ -55,7 +55,7 @@ struct GoalFeature {
                 state.details[id: id] = item
                 state.updatedTime = date()
                 
-                sortDetails(&state)
+                state.sortDetails()
                 
                 if state.progress == 1.0 {
                     if state.finishDate == nil {
@@ -108,7 +108,7 @@ struct GoalFeature {
                         updatedTime: date()
                     )
                     state.details.append(newItem)
-                    sortDetails(&state)
+                    state.sortDetails()
 
                     state.local.isAddingItem = false
                     state.local.newItemTitle = ""
@@ -130,7 +130,7 @@ struct GoalFeature {
                     items[index].order = index
                 }
                 state.details = IdentifiedArrayOf(uniqueElements: items)
-                sortDetails(&state)
+                state.sortDetails()
                 
                 state.updatedTime = date()
                 return .send(.delegate(.updateGoalDetails(state.id, state.details)))
@@ -151,19 +151,5 @@ struct GoalFeature {
                 return .none
             }
         }
-    }
-    
-    private func sortDetails(_ state: inout State) {
-        var items = Array(state.details)
-        items.sort {
-            if $0.isDone == $1.isDone {
-                return $0.order < $1.order
-            }
-            return !$0.isDone && $1.isDone
-        }
-        for index in items.indices {
-            items[index].order = index
-        }
-        state.details = IdentifiedArray(uniqueElements: items)
     }
 }
