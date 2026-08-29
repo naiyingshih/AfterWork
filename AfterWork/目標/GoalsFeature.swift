@@ -25,9 +25,10 @@ struct GoalsFeature {
         
         var completedGoals: IdentifiedArrayOf<Goal> {
             let filtered = goals.filter { $0.isCompleted }
-            return IdentifiedArray(uniqueElements: filtered.sorted(by: Self.sortGoals))
+            return IdentifiedArray(uniqueElements: filtered.sorted(by: Self.sortCompletedGoals))
         }
         
+        /// 未完成：預計完成日近的排前面，沒有預計完成日的排最後。
         static func sortGoals(_ goal1: Goal, _ goal2: Goal) -> Bool {
             if let d1 = goal1.targetDate, let d2 = goal2.targetDate {
                 if d1 == d2 {
@@ -41,6 +42,17 @@ struct GoalsFeature {
             } else {
                 return goal1.createdTime > goal2.createdTime
             }
+        }
+        
+        /// 已完成：完成日越新排越上面。
+        static func sortCompletedGoals(_ goal1: Goal, _ goal2: Goal) -> Bool {
+            // completedGoals 濾的條件就是「有完成日」，這裡的 nil 不會發生。
+            let date1 = goal1.finishDate ?? .distantPast
+            let date2 = goal2.finishDate ?? .distantPast
+            if date1 == date2 {
+                return goal1.createdTime > goal2.createdTime
+            }
+            return date1 > date2
         }
     }
     
