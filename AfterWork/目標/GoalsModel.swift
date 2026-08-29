@@ -165,9 +165,7 @@ struct GoalItem: Equatable, Identifiable, Codable, Sendable {
     var title: String
     /// 是否完成
     var isDone: Bool
-    /// 是否加入今日
-    var isAddedToToday: Bool
-    /// 加入今日的時間
+    /// 加入今日的時間。nil 代表沒被拉進今天分頁
     var addedToTodayTime: Date?
     /// 順序
     var order: Int

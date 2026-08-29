@@ -23,7 +23,6 @@ struct GoalFinishDateTests {
             id: id,
             title: id,
             isDone: isDone,
-            isAddedToToday: true,
             addedToTodayTime: now.addingTimeInterval(Double(order)),
             order: order,
             createdTime: now,

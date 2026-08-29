@@ -93,7 +93,6 @@ struct GoalFeature {
                         id: uuid().uuidString,
                         title: title,
                         isDone: false,
-                        isAddedToToday: false,
                         addedToTodayTime: nil,
                         order: state.details.count,
                         createdTime: date(),
@@ -129,7 +128,6 @@ struct GoalFeature {
                 return .send(.delegate(.updateGoalDetails(state)))
                 
             case let .addToToday(id):
-                state.details[id: id]?.isAddedToToday = true
                 state.details[id: id]?.addedToTodayTime = date()
                 state.updatedTime = date()
                 return .send(.delegate(.updateGoalDetails(state)))

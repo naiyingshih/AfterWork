@@ -54,7 +54,7 @@ struct TodayFeature {
             for goal in allGoals {
                 let todayDetails = goal.details
                     .filter { detail in
-                        guard detail.isAddedToToday, let addedTime = detail.addedToTodayTime else { return false }
+                        guard let addedTime = detail.addedToTodayTime else { return false }
                         return calendar.isDate(addedTime, inSameDayAs: today)
                     }
                     .sorted { lhs, rhs in
@@ -181,7 +181,6 @@ struct TodayFeature {
                 
             case let .deleteGoalItem(todayItem):
                 var updatedItem = todayItem.item
-                updatedItem.isAddedToToday = false
                 updatedItem.addedToTodayTime = nil
                 updatedItem.updatedTime = now
                 state.$allGoals.withLock {
