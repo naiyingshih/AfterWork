@@ -14,7 +14,8 @@ struct GoalFormFeature {
     struct State: Equatable {
         var title: String = ""
         var description: String = ""
-        var targetDate: Date
+        /// 預計完成日。新增時不預設帶入日期，nil 代表使用者還沒設定
+        var targetDate: Date?
         var mode: Mode
         
         enum Mode: Equatable {
@@ -23,21 +24,19 @@ struct GoalFormFeature {
         }
         
         init(mode: Mode = .add) {
-            @Dependency(\.date.now) var now
             self.mode = mode
-            self.targetDate = now
             if case let .edit(goal) = mode {
                 self.title = goal.title
                 self.description = goal.description ?? ""
-                if let date = goal.targetDate {
-                    self.targetDate = date
-                }
+                self.targetDate = goal.targetDate
             }
         }
     }
     
     enum Action: BindableAction {
         case binding(BindingAction<State>)
+        case setTargetDateTapped
+        case clearTargetDateTapped
         case saveButtonTapped
         case cancelButtonTapped
         case delegate(Delegate)
@@ -55,6 +54,14 @@ struct GoalFormFeature {
         Reduce { state, action in
             switch action {
             case .binding:
+                return .none
+                
+            case .setTargetDateTapped:
+                state.targetDate = date()
+                return .none
+                
+            case .clearTargetDateTapped:
+                state.targetDate = nil
                 return .none
                 
             case .saveButtonTapped:
