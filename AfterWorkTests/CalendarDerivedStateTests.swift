@@ -79,9 +79,9 @@ struct CalendarDerivedStateTests {
             ]
         }
         
-        let byDay = state.habitTypesByDay
-        #expect(byDay[calendar.startOfDay(for: day1)] == [.health, .learning])
-        #expect(byDay[calendar.startOfDay(for: day2)] == [.health])
+        let byDay = state.habitStylesByDay
+        #expect(byDay[calendar.startOfDay(for: day1)] == [.type(.health), .type(.learning)])
+        #expect(byDay[calendar.startOfDay(for: day2)] == [.type(.health)])
         #expect(byDay[calendar.startOfDay(for: day2.addingTimeInterval(60 * 60 * 24))] == nil)
     }
 }

@@ -182,7 +182,7 @@ struct Goal {
 | `habitsRepository` / `todayTasksRepository` / `goalsRepository` | Firestore 讀寫，各含一個 `stream*` 與逐筆 CRUD |
 | `\.date` | 所有會被寫進資料的時間 |
 | `\.uuid` | 所有新建實體的 id |
-| `\.dismiss` | 未使用（目前由父層 nil 掉 presentation state） |
+| `\.dismiss` | `HabitManageFeature` 刪除後自己關 sheet；其餘 presentation 仍由父層 nil 掉 |
 
 三個 repository 都有 `liveValue` / `testValue` / `previewValue`：
 
@@ -194,6 +194,8 @@ struct Goal {
 **會被寫進資料的，一律走 dependency。** Repository 只做 I/O，不再自己補 `updatedTime`（以前會，導致本地 state 與雲端的時間戳不一致）；時間由 reducer 設好再交出去，`updateGoalDetails` 因此直接收整個 `Goal`（reducer 已經把 `updatedTime`、`finishDate` 設好），只寫回 `details` / `finishDate` / `updatedTime` 三個欄位。
 
 **例外：State 的預設值。** `TodayFeature.today`、`CalendarFeature.selectedDate` / `currentMonth` 仍然用 `Date()`。它們是「畫面初始停在哪」的種子值，不是會被持久化的資料。改成讀 dependency 的話，測試裡建 `AppFeature.State()` 就會踩到未實作的 `date` 而失敗。測試要控時間直接指定這些欄位即可。
+
+**Presentation 的 State 也不要自己 `Date()`。** `HabitManageFeature.State.init` 收一個 `now` 參數，由 `TodayFeature` 從 `@Dependency(\.date.now)` 傳進來 —— 結束日的預設值（今天）會跟著儲存被寫進資料，屬於上面那條規則，不是種子值。
 
 `TodayFeature.today` 另有一個作用：所有「今天的」清單都以它為基準篩選。若在計算屬性裡直接呼叫 `Date()`，跨日時 state 沒有變化，SwiftUI 不會重繪。進畫面／回到前景／收到系統跨日通知時，`.refreshToday` 會用 `@Dependency(\.date)` 對時。
 
@@ -207,21 +209,29 @@ struct Goal {
 
 `goalForm` 雖然不是 sheet 而是自繪的 overlay，也走同一套（scrim 點擊送 `.goalForm(.dismiss)`）。
 
+子 feature 要在「同一個 action 裡順便收掉自己」時用 `@Dependency(\.dismiss)`，不要讓父層把 presentation state 設成 nil：`HabitManageFeature` 的刪除是「收 alert」跟「收 sheet」兩件事，併成同一次繪製的話，SwiftUI 在 sheet 的收合動畫期間會沿用上一輪的子狀態（alert 還在），alert 就會再閃出來一次。
+
 ### 衍生資料放在 State，不放在 View
 
 「選了某天 → 那天有哪些成就」這類邏輯屬於 State 的計算屬性，View 只負責畫。`CalendarFeature.State` 上有：
 
 - `achievementTasks` — 選中那天的今日任務 + 目標細項，統一成 `AchievementTask`
 - `achievementHabits` — 選中那天執行過的習慣
-- `habitTypesByDay: [Date: Set<HabitType>]` — 日曆格子的小圓點
+- `habitStylesByDay: [Date: Set<HabitStyle>]` — 日曆格子的小圓點。依**配色身份**去重而不是類型：兩個都是「其他」但自訂色不同的習慣要各畫一顆點（見下方「顏色」）。一格畫得下四顆，`DayCellView` 排序後截斷，順序每次重繪才一樣
 
 同理 `TodayFeature.State` 的 `habits` / `todayTasks` / `goalItems` 都是從共享陣列篩出來的計算屬性。
 
-⚠️ **計算屬性每次讀取都會重算。** `habitTypesByDay` 做成 dictionary 就是為了讓 `MonthGridView` **整頁讀一次**再分給 42 個格子；每格自己去掃全部習慣的 `completedDates` 是 42 × N 次日期比對，而且每次重繪重來。
+**表單欄位同理。** 重複規則在畫面上被拆成「種類 + 自訂數量 / 單位」三個 Picker，這三個值住在 `HabitManageFeature.State`（`repeatKind` / `customAmount` / `customUnit`），儲存時由計算屬性 `composedRepeatRule` 組回一個 `RepeatRule`。以前它們是 `HabitManageSheet` 自己的 `@State`，靠 `onAppear` / `onChange` 跟 `habit.repeatRule` 雙向手動同步 —— 同一份資料兩個真相來源，而且組裝邏輯住在 View 裡沒辦法測。
+
+⚠️ **計算屬性每次讀取都會重算。** `habitStylesByDay` 做成 dictionary 就是為了讓 `MonthGridView` **整頁讀一次**再分給 42 個格子；每格自己去掃全部習慣的 `completedDates` 是 42 × N 次日期比對，而且每次重繪重來。
 
 ### 顏色
 
 色票放在 `Assets.xcassets/Colors`，`Helper/Color+App.swift` 只補推導出來的語意色。`labelSecondary` / `labelTertiary` / `onFill` 是各自獨立的色票而非 opacity 疊出來的 —— 深色模式用 opacity 推導會讓次要文字掉到 2.3:1。NavigationBar 與 TabBar 是 UIKit 畫的，在 `AppDelegate.configureAppearance()` 統一設定。
+
+**習慣的配色身份是 `HabitStyle` 而不是 `HabitType`。** 內建三種類型由類型決定顏色（走 colorset），「其他」由使用者從 `HabitTagColor` 的八個固定色票挑一個；`Habit.style` 把兩者收斂成同一個型別（`.type` / `.custom`），`fillColor` / `accentColor` 都掛在 `HabitStyle` 上，畫面（習慣卡、成就 tag、日曆圓點）只認 style，不再 switch 類型。
+
+給固定色票而不是開放 `ColorPicker`：填色上的文字一律是 `Color.onFill`，放任選色很容易挑到跟它對比不足的顏色。這八個色值直接寫在 `Color+App.swift` 而不是拆成 16 個 colorset —— 重點就是「每個都驗過對比」，色值跟對比數字放在一起才看得出為什麼是這個值（檔案裡有對比表）。同一處另有兩個私有工具：`Color(hex:)`（只給這組寫死的色票用，不解析外部輸入）與 `Color(light:dark:)`（colorset 以外的色要跟著深淺模式翻轉時用）。
 
 ---
 
@@ -236,6 +246,7 @@ struct Goal {
 | `CalendarDerivedStateTests` | 成就卡與日曆圓點的衍生邏輯（這幾段以前寫在 View 裡，完全測不到） |
 | `GoalItemSortingTests` | 細項兩個勾選入口（目標分頁、今天分頁）排出來的順序一致；今天分頁自己的清單不會跟著跳位 |
 | `GoalFinishDateTests` | 勾完最後一項才蓋上完成日、退回未完成就清掉，兩個入口都會寫進雲端；已完成／未完成分組看的是完成日 |
+| `HabitManageTests` | 編輯習慣頁：刪除要先確認、收 alert 與收 sheet 分兩拍；「其他」的自訂色（存檔補預設、改回內建類型清掉、日曆圓點各算一顆）；結束日預設今天而不是建立日 |
 
 寫測試時：
 

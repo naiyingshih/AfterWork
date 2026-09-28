@@ -70,15 +70,16 @@ struct CalendarFeature {
             }
         }
         
-        /// 每一天執行過哪些習慣類型，給日曆格子上的小圓點用。
+        /// 每一天執行過哪些配色的習慣，給日曆格子上的小圓點用。
+        /// 依 `HabitStyle` 去重而不是依類型：兩個都是「其他」但自訂色不同的習慣要各畫一顆點。
         /// 做成 dictionary 是因為一頁有 42 格：逐格去掃全部習慣是 42 × N 次日期比對，
         /// 而且每次重繪都要重來一遍。呼叫端請讀一次存成區域變數再分給各格。
-        var habitTypesByDay: [Date: Set<HabitType>] {
+        var habitStylesByDay: [Date: Set<HabitStyle>] {
             let calendar = Calendar.current
-            var result: [Date: Set<HabitType>] = [:]
+            var result: [Date: Set<HabitStyle>] = [:]
             for habit in allHabits {
                 for date in habit.completedDates {
-                    result[calendar.startOfDay(for: date), default: []].insert(habit.type)
+                    result[calendar.startOfDay(for: date), default: []].insert(habit.style)
                 }
             }
             return result

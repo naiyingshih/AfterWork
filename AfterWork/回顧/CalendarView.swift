@@ -172,14 +172,14 @@ struct MonthGridView: View {
     var body: some View {
         let days = Self.generateDays(for: month)
         // 整頁只算一次再分給各格；每格自己去掃全部習慣的話是 42 × N 次比對。
-        let habitTypesByDay = store.habitTypesByDay
+        let habitStylesByDay = store.habitStylesByDay
         let calendar = Calendar.current
         LazyVGrid(columns: columns, spacing: CalendarGridMetrics.rowSpacing) {
             ForEach(0..<days.count, id: \.self) { index in
                 if let date = days[index] {
                     DayCellView(
                         date: date,
-                        habitTypes: habitTypesByDay[calendar.startOfDay(for: date)] ?? [],
+                        habitStyles: habitStylesByDay[calendar.startOfDay(for: date)] ?? [],
                         store: store
                     )
                         .onTapGesture {
@@ -228,8 +228,11 @@ struct MonthGridView: View {
 // MARK: - DayCellView
 struct DayCellView: View {
     let date: Date
-    let habitTypes: Set<HabitType>
+    let habitStyles: Set<HabitStyle>
     let store: StoreOf<CalendarFeature>
+    
+    /// 一格的寬度大約 50pt，超過四顆點就會撐破格子（自訂色讓一天可能有任意多種配色）。
+    private static let maxDots = 4
     
     var body: some View {
         let calendar = Calendar.current
@@ -246,13 +249,12 @@ struct DayCellView: View {
             
             // Habit dots
             HStack(spacing: 4) {
-                ForEach(HabitType.allCases, id: \.self) { type in
-                    if habitTypes.contains(type) {
-                        Circle().fill(type.accentColor).frame(width: 5, height: 5)
-                    }
+                // 排序過再截斷，同一天的圓點順序每次重繪才會一樣。
+                ForEach(habitStyles.sorted().prefix(Self.maxDots), id: \.self) { style in
+                    Circle().fill(style.accentColor).frame(width: 5, height: 5)
                 }
                 
-                if habitTypes.isEmpty {
+                if habitStyles.isEmpty {
                     Circle().fill(Color.clear).frame(width: 5, height: 5) // Preserve height
                 }
             }

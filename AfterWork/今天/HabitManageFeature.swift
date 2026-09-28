@@ -27,6 +27,8 @@ public struct HabitManageFeature {
         public var hasEndDate: Bool
         public var endDate: Date
         
+        @Presents public var alert: AlertState<Action.Alert>?
+        
         public enum RepeatKind: String, CaseIterable, Equatable, Sendable {
             case daily = "每天"
             case weekly = "每週"
@@ -34,7 +36,9 @@ public struct HabitManageFeature {
             case custom = "自訂"
         }
         
-        public init(habit: Habit, isEditing: Bool = false) {
+        /// `now` 由呼叫端（reducer）從 `@Dependency(\.date)` 傳進來，不要在這裡直接 `Date()`：
+        /// 結束日預設值會被寫進資料，測試得控得住它。
+        public init(habit: Habit, isEditing: Bool = false, now: Date) {
             self.habit = habit
             self.isEditing = isEditing
             self.originalRepeatRule = isEditing ? habit.repeatRule : nil
@@ -59,8 +63,8 @@ public struct HabitManageFeature {
             }
             
             self.hasEndDate = habit.endDate != nil
-            // 沒設過結束日就從建立日起算，不要用 `Date()`（不可控，而且結束日早於建立日沒有意義）。
-            self.endDate = habit.endDate ?? habit.createdTime
+            // 結束日預設今天
+            self.endDate = habit.endDate ?? now
         }
         
         /// 把三個控制項組回 RepeatRule。
@@ -78,14 +82,22 @@ public struct HabitManageFeature {
         case binding(BindingAction<State>)
         case saveButtonTapped
         case cancelButtonTapped
+        case deleteButtonTapped
+        case alert(PresentationAction<Alert>)
         case delegate(Delegate)
+        
+        public enum Alert: Equatable {
+            case confirmDelete
+        }
         
         public enum Delegate: Equatable {
             case saveHabit(Habit)
+            case deleteHabit(Habit.ID)
         }
     }
     
     @Dependency(\.date) var date
+    @Dependency(\.dismiss) var dismiss
     
     public init() {}
     
@@ -102,9 +114,35 @@ public struct HabitManageFeature {
                     effectiveFrom: date()
                 )
                 habit.endDate = state.hasEndDate ? state.endDate : nil
+                habit.normalizeTagColor()
                 state.habit = habit
                 return .send(.delegate(.saveHabit(habit)))
             case .cancelButtonTapped:
+                return .none
+            case .deleteButtonTapped:
+                state.alert = AlertState {
+                    TextState("確定刪除此習慣？")
+                } actions: {
+                    ButtonState(role: .destructive, action: .confirmDelete) {
+                        TextState("是")
+                    }
+                    ButtonState(role: .cancel) {
+                        TextState("否")
+                    }
+                } message: {
+                    TextState("已累積的連續天數與完成紀錄會一併刪除。")
+                }
+                return .none
+            case .alert(.presented(.confirmDelete)):
+                // 這個 action 本身會把 state.alert 清成 nil，但收掉 alert 跟收掉 sheet
+                // 必須分成兩次繪製：兩者同時發生時，SwiftUI 在 sheet 的收合動畫期間
+                // 會沿用上一輪的子狀態（alert 還在），alert 就會再閃出來一次。
+                // 所以這裡不讓上層直接把 habitManage 設成 nil，改用 dismiss() 隔一拍再關。
+                return .run { [id = state.habit.id] send in
+                    await send(.delegate(.deleteHabit(id)))
+                    await dismiss()
+                }
+            case .alert:
                 return .none
             case .binding:
                 return .none
@@ -112,5 +150,6 @@ public struct HabitManageFeature {
                 return .none
             }
         }
+        .ifLet(\.$alert, action: \.alert)
     }
 }

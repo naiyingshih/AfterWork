@@ -9,15 +9,18 @@ import SwiftUI
 
 public struct HabitTagView: View {
     public let title: String
-    public let type: HabitType
+    public let style: HabitStyle
     public let isCompleted: Bool
     public let streak: Int
     public let onTap: () -> Void
     public let onLongPress: () -> Void
 
-    public init(title: String, type: HabitType, isCompleted: Bool, streak: Int, onTap: @escaping () -> Void, onLongPress: @escaping () -> Void) {
+    /// 觸發長按震動用。`sensoryFeedback` 是看 trigger 值有沒有變，所以這裡用次數而不是 Bool。
+    @State private var longPressCount = 0
+
+    public init(title: String, style: HabitStyle, isCompleted: Bool, streak: Int, onTap: @escaping () -> Void, onLongPress: @escaping () -> Void) {
         self.title = title
-        self.type = type
+        self.style = style
         self.isCompleted = isCompleted
         self.streak = streak
         self.onTap = onTap
@@ -38,12 +41,12 @@ public struct HabitTagView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(isCompleted ? Color.onFill.opacity(0.15) : type.accentColor.opacity(0.15))
+            .background(isCompleted ? Color.onFill.opacity(0.15) : style.accentColor.opacity(0.15))
             .cornerRadius(12)
-            .foregroundColor(isCompleted ? Color.onFill : type.accentColor)
+            .foregroundColor(isCompleted ? Color.onFill : style.accentColor)
         }
         .frame(width: 90, height: 90)
-        .background(isCompleted ? type.fillColor : Color.card)
+        .background(isCompleted ? style.fillColor : Color.card)
         .foregroundColor(isCompleted ? Color.onFill : Color.label)
         .cornerRadius(24)
         .overlay(
@@ -57,9 +60,13 @@ public struct HabitTagView: View {
         .onTapGesture {
             onTap()
         }
+        // 長按沒有視覺上的「按下去了」回饋，只靠手感告訴使用者手勢成立了
+        // —— 跟系統長按格狀項目叫出選單時的那下一樣。
         .onLongPressGesture(minimumDuration: 0.4) {
+            longPressCount += 1
             onLongPress()
         }
+        .sensoryFeedback(.impact(weight: .medium), trigger: longPressCount)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: "編輯") {
