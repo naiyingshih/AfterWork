@@ -203,12 +203,13 @@ struct TodayFeature {
                         type: .health,
                         createdTime: now,
                         updatedTime: now
-                    )
+                    ),
+                    now: now
                 )
                 return .none
                 
             case let .editHabitButtonTapped(habit):
-                state.habitManage = HabitManageFeature.State(habit: habit, isEditing: true)
+                state.habitManage = HabitManageFeature.State(habit: habit, isEditing: true, now: now)
                 return .none
                 
             case .addTaskButtonTapped:
@@ -230,6 +231,16 @@ struct TodayFeature {
                     } else {
                         try await habitsRepository.saveHabit(habit)
                     }
+                } catch: { error, send in
+                    await send(.writeFailed(error))
+                }
+                
+            case let .habitManage(.presented(.delegate(.deleteHabit(id)))):
+                // sheet 的關閉交給子層的 dismiss()，這裡不要直接清掉 habitManage
+                // —— 原因見 HabitManageFeature 的 confirmDelete。
+                state.$allHabits.withLock { _ = $0.remove(id: id) }
+                return .run { _ in
+                    try await habitsRepository.deleteHabit(id)
                 } catch: { error, send in
                     await send(.writeFailed(error))
                 }

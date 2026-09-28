@@ -86,7 +86,7 @@ struct AchievementCardView: View {
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
                                 .foregroundColor(Color.onFill)
-                                .background(habit.type.fillColor)
+                                .background(habit.style.fillColor)
                                 .cornerRadius(8)
                         }
                     } else {

@@ -12,6 +12,53 @@ public enum HabitType: String, CaseIterable, Codable, Equatable, Sendable {
     case health = "健康"
     case chores = "家務"
     case learning = "學習"
+    /// 不屬於前三種的習慣。顏色不由類型決定，改由使用者從 `HabitTagColor` 挑一個。
+    case other = "其他"
+}
+
+/// 「其他」類型可以挑的 tag 色票。
+///
+/// 給固定色票而不是開放任意選色：填色上的文字一律是 `Color.onFill`，
+/// 放任選色很容易挑到跟它對比不足的顏色（太亮或太暗都會）。
+/// 這裡每個色都先驗過對比 —— 見 `Color+App.swift` 的色值表。
+public enum HabitTagColor: String, CaseIterable, Codable, Equatable, Sendable {
+    case rose = "玫瑰"
+    case coral = "珊瑚"
+    case mint = "薄荷"
+    case sky = "天藍"
+    case indigo = "靛藍"
+    case lavender = "薰衣草"
+    case plum = "梅紫"
+    case slate = "石板"
+
+    /// 選了「其他」但還沒挑顏色時的預設值。中性色，不會跟內建三種類型撞色。
+    public static let fallback: HabitTagColor = .slate
+}
+
+/// 一個習慣在畫面上的配色身份。
+///
+/// 內建類型由類型決定；「其他」由使用者挑的色票決定。
+/// 日曆圓點要靠它去重 —— 兩個都是「其他」但顏色不同的習慣，得各畫一顆點。
+public enum HabitStyle: Hashable, Sendable {
+    case type(HabitType)
+    case custom(HabitTagColor)
+
+    /// 圓點排序用。內建類型照 `HabitType` 的宣告順序，自訂色接在後面，
+    /// 讓同一天的圓點順序每次重繪都一樣。
+    public var sortIndex: Int {
+        switch self {
+        case let .type(type):
+            return HabitType.allCases.firstIndex(of: type) ?? 0
+        case let .custom(color):
+            return HabitType.allCases.count + (HabitTagColor.allCases.firstIndex(of: color) ?? 0)
+        }
+    }
+}
+
+extension HabitStyle: Comparable {
+    public static func < (lhs: HabitStyle, rhs: HabitStyle) -> Bool {
+        lhs.sortIndex < rhs.sortIndex
+    }
 }
 
 public enum RepeatRuleUnit: String, CaseIterable, Codable, Equatable, Sendable {
@@ -54,6 +101,9 @@ public struct Habit: Identifiable, Equatable, Codable, Sendable {
     public let id: String
     public var title: String
     public var type: HabitType
+    /// 只有 `type == .other` 時才有意義的 tag 顏色。
+    /// 舊資料沒有這個欄位（nil），取用時退回 `HabitTagColor.fallback` —— 見 `style`。
+    public var tagColor: HabitTagColor?
     public var repeatRule: RepeatRule
     /// 目前這條規則的生效日，同時是計算週期的錨點。
     /// 改規則時移到修改當天，新規則就從那天重新起算。
@@ -69,6 +119,7 @@ public struct Habit: Identifiable, Equatable, Codable, Sendable {
         id: String = UUID().uuidString,
         title: String,
         type: HabitType,
+        tagColor: HabitTagColor? = nil,
         repeatRule: RepeatRule = .daily,
         repeatRuleStartDate: Date? = nil,
         streak: Int = 0,
@@ -80,6 +131,7 @@ public struct Habit: Identifiable, Equatable, Codable, Sendable {
         self.id = id
         self.title = title
         self.type = type
+        self.tagColor = tagColor
         self.repeatRule = repeatRule
         self.repeatRuleStartDate = repeatRuleStartDate
         self.streak = streak
@@ -87,6 +139,17 @@ public struct Habit: Identifiable, Equatable, Codable, Sendable {
         self.createdTime = createdTime
         self.endDate = endDate
         self.updatedTime = updatedTime
+    }
+    
+    /// 這個習慣在畫面上的配色身份（tag 底色、日曆圓點）。
+    public var style: HabitStyle {
+        type == .other ? .custom(tagColor ?? .fallback) : .type(type)
+    }
+    
+    /// 寫入前的正規化：`tagColor` 只屬於「其他」，
+    /// 改成內建類型就清掉，不要在資料裡留下讀不到的殘值。
+    public mutating func normalizeTagColor() {
+        tagColor = type == .other ? (tagColor ?? .fallback) : nil
     }
     
     public var isCompletedToday: Bool {

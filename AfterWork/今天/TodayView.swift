@@ -105,7 +105,7 @@ public struct TodayView: View {
                     ForEach(store.habits) { habit in
                         HabitTagView(
                             title: habit.title,
-                            type: habit.type,
+                            style: habit.style,
                             isCompleted: habit.isCompletedToday,
                             streak: habit.streak,
                             onTap: {
