@@ -1,6 +1,6 @@
 # AfterWork 架構
 
-iOS App，SwiftUI + [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture) 1.23，資料存在 Firebase Firestore。
+iOS App，SwiftUI + [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture) 1.23，資料存在 Firebase Firestore，以 Firebase 匿名登入區分使用者（使用者看不到登入畫面）。
 
 三個分頁：**目標**（長期目標與細項）、**今天**（今日習慣與任務）、**回顧**（日曆與每日成就）。
 
@@ -18,6 +18,7 @@ AfterWork/
 ├── Shared/                   跨分頁共用的基礎設施
 │   ├── SharedStateKeys.swift    三個 @Shared(.inMemory) key
 │   ├── FirestoreStream.swift    snapshot listener → AsyncStream
+│   ├── UserSession.swift        匿名登入取 uid、userCollection(_:) 組 users/{uid}/… 路徑
 │   └── WriteFailureAlert.swift  寫入失敗的提示
 │
 ├── 目標/
@@ -102,6 +103,12 @@ firestoreCollectionStream("habits", as: Habit.self)   // addSnapshotListener + o
 1. 本地寫入會被 Firestore 的 latency compensation 立刻回吐，畫面不必等 server 來回。
 2. 其他裝置改的資料會自己推進來。
 3. 各分頁不必再各自 `onAppear` 重抓 —— 這正是「今天勾完任務、切到回顧字沒變」那個 bug 的根源。
+
+**資料路徑一律是 `users/{uid}/{collection}`**（`goals` / `habits` / `todayTasks`）。所有讀寫都經過 `UserSession.swift` 的 `userCollection(_:)`，不要在別處直接 `Firestore.firestore().collection(…)`；Firestore Rules 只允許 `request.auth.uid == userId` 存取自己的資料，走根層路徑會被拒絕。
+
+- `UserSession` 是 actor，快取同一個 sign-in Task：App 啟動時三條 stream 同時要 uid，若各自 `signInAnonymously()` 會建出三個匿名帳號。匿名帳號存在 Keychain，重開 App 沿用同一個 uid。
+- stream 要先拿到 uid 才能掛 listener；登入失敗（例如首次啟動就離線）每 3 秒重試，不讓畫面永遠空白。
+- 首次啟動又離線時，寫入會在取 uid 階段就 throw（還沒有帳號，進不了 Firestore 的離線佇列），由下方 ② 的「回滾 + alert」接住。
 
 **沒有任何 View 會為了拿資料而觸發抓取。** 三個分頁都沒有 fetch 用的 `onAppear`。
 

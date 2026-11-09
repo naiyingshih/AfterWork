@@ -24,21 +24,18 @@ extension TodayTasksRepository: DependencyKey {
         },
         saveTask: { task in
             let data = try Firestore.Encoder().encode(task)
-            try await Firestore.firestore()
-                .collection("todayTasks")
+            try await userCollection("todayTasks")
                 .document(task.id)
                 .setData(data)
         },
         deleteTask: { id in
-            try await Firestore.firestore()
-                .collection("todayTasks")
+            try await userCollection("todayTasks")
                 .document(id)
                 .delete()
         },
         updateTask: { task in
             let data = try Firestore.Encoder().encode(task)
-            try await Firestore.firestore()
-                .collection("todayTasks")
+            try await userCollection("todayTasks")
                 .document(task.id)
                 .setData(data, merge: true)
         }
