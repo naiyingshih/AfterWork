@@ -25,14 +25,12 @@ extension GoalsRepository: DependencyKey {
         },
         saveGoal: { goal in
             let data = try Firestore.Encoder().encode(goal)
-            try await Firestore.firestore()
-                .collection("goals")
+            try await userCollection("goals")
                 .document(goal.id)
                 .setData(data)
         },
         deleteGoal: { id in
-            try await Firestore.firestore()
-                .collection("goals")
+            try await userCollection("goals")
                 .document(id)
                 .delete()
         },
@@ -50,8 +48,7 @@ extension GoalsRepository: DependencyKey {
             } else {
                 data["finishDate"] = FieldValue.delete()
             }
-            try await Firestore.firestore()
-                .collection("goals")
+            try await userCollection("goals")
                 .document(goal.id)
                 .updateData(data)
         }

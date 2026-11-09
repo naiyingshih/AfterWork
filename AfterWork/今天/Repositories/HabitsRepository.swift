@@ -28,21 +28,18 @@ extension HabitsRepository: DependencyKey {
         },
         saveHabit: { habit in
             let data = try Firestore.Encoder().encode(habit)
-            try await Firestore.firestore()
-                .collection("habits")
+            try await userCollection("habits")
                 .document(habit.id)
                 .setData(data)
         },
         deleteHabit: { id in
-            try await Firestore.firestore()
-                .collection("habits")
+            try await userCollection("habits")
                 .document(id)
                 .delete()
         },
         updateHabit: { habit in
             let data = try Firestore.Encoder().encode(habit)
-            try await Firestore.firestore()
-                .collection("habits")
+            try await userCollection("habits")
                 .document(habit.id)
                 .setData(data)
         }
