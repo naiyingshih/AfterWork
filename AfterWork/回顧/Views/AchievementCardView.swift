@@ -14,7 +14,7 @@ struct AchievementCardView: View {
     var body: some View {
         if let selectedDate = store.selectedDate {
             VStack(alignment: .leading, spacing: 16) {
-                Text("\(dateString(from: selectedDate)) 成就")
+                Text("\(dateString(from: selectedDate))")
                     .font(.headline)
                     .foregroundColor(Color.labelSecondary)
                 
