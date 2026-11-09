@@ -14,7 +14,7 @@ struct AchievementCardView: View {
     var body: some View {
         if let selectedDate = store.selectedDate {
             VStack(alignment: .leading, spacing: 16) {
-                Text("\(dateString(from: selectedDate))")
+                Text(dateString(from: selectedDate))
                     .font(.headline)
                     .foregroundColor(Color.labelSecondary)
                 
@@ -44,6 +44,8 @@ struct AchievementCardView: View {
                                 Text(task.isDone ? "✓ \(task.title)" : task.title)
                                     .font(.subheadline)
                                     .foregroundColor(task.isDone ? Color.label : Color.labelTertiary)
+                                    .accessibilityLabel(task.title)
+                                    .accessibilityValue(task.isDone ? "已完成" : "未完成")
                             }
                         }
                         .padding(.top, 4)

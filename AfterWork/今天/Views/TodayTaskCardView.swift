@@ -35,6 +35,8 @@ public struct TodayTaskCardView: View {
                     .font(.system(size: 16, weight: isDone ? .medium : .bold))
                     .foregroundColor(isDone ? Color.labelTertiary : Color.label)
                     .strikethrough(isDone, color: Color.labelTertiary)
+                    // 標題已經由左邊的勾選按鈕唸出，這裡藏起來避免 VoiceOver 連唸兩次。
+                    .accessibilityHidden(true)
                 
                 if let sourceGoalName = sourceGoalName {
                     HStack(spacing: 4) {

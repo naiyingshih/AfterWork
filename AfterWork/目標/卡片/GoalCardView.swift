@@ -63,7 +63,7 @@ struct GoalCardView: View {
                 
                 if store.isExpanded && store.description?.isEmpty == false {
                     Text(store.description ?? "")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundColor(Color.onDescriptionBubble)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
@@ -106,6 +106,8 @@ struct GoalCardView: View {
                             Text(item.title)
                                 .strikethrough(item.isDone, color: Color.labelTertiary)
                                 .foregroundColor(item.isDone ? Color.labelTertiary : Color.label)
+                                // 標題已經由左邊的勾選按鈕唸出，這裡藏起來避免 VoiceOver 連唸兩次。
+                                .accessibilityHidden(true)
                             
                             Spacer()
                         }
