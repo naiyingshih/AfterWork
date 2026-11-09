@@ -15,15 +15,11 @@ import SwiftUI
 extension Color {
 
     /// 疊在 `main` 之上的前景色。
-    /// 直接用 `.white` 在深色模式的 main 上對比不足，換成會跟著模式翻轉的 `background`
-    /// 兩邊都有 3:1 以上（淺 3.11:1、深 6.20:1）。
+    /// 直接用 `.white` 在深色模式的 main 上對比不足，換成會跟著模式翻轉的 `background`。
     static var onMain: Color { Color.background }
 
-    /// 卡片外框、分隔線。
-    static var hairline: Color { Color.label.opacity(0.12) }
-
-    /// 輸入框與 chip 的底色。
-    static var fieldBackground: Color { Color.label.opacity(0.08) }
+    /// 輸入框與 chip 的底色。設計稿裡跟分隔線是同一個色（#E7E7E7）。
+    static var fieldBackground: Color { Color.hairline }
 }
 
 // MARK: - 習慣配色
@@ -35,7 +31,7 @@ extension HabitStyle {
     /// label 會隨模式翻轉成淺色，疊在同樣淺的粉彩上只剩 1.1~1.6:1。
     var fillColor: Color {
         switch self {
-        case .type(.health): return Color.sub
+        case .type(.health): return Color.health
         case .type(.chores): return Color.chores
         case .type(.learning): return Color.learning
         // `.other` 一律走 `.custom`（見 `Habit.style`），這裡只是讓 switch 完整。
@@ -45,7 +41,7 @@ extension HabitStyle {
     }
 
     /// 前景色（小圖示、日曆圓點）。淺色模式為加深版本、深色模式為提亮版本，
-    /// 因為原始粉彩色畫在米白卡片上只有 1.4:1。
+    /// 因為原始粉彩色畫在白色卡片上對比太低，小圖示幾乎看不見。
     var accentColor: Color {
         switch self {
         case .type(.health): return Color.healthAccent
@@ -57,15 +53,14 @@ extension HabitStyle {
     }
 }
 
-/// 「其他」類型的自訂色票。
+/// 「其他」類型的自訂色票，色值以 Figma 的 Habit Tag 元件為準。
 ///
-/// 色值直接寫在程式裡而不是拆成 16 個 colorset：這組色的重點是「都驗過對比」，
-/// 色值跟對比數字放在一起才看得出為什麼是這個值。
+/// 色值直接寫在程式裡而不是拆成 12 個 colorset：色值跟對比數字放在一起才看得出為什麼是這個值。
 ///
 /// 對比（用跟內建三色同一套基準算）：
-/// - `fillColor` 對 `Color.onFill`(#344E41)：4.0~5.6:1（內建三色是 4.0~5.7:1）
-/// - 淺色 `accentColor` 對 `Color.card`(#F5F3EE)：4.0~5.2:1
-/// - 深色 `accentColor` 對深色 `Color.card`(#3A5A40)：3.4~4.8:1
+/// - `fillColor` 對 `Color.onFill`(#344E41)：4.8~7.6:1
+/// - 淺色 `accentColor` 對 `Color.card`(#FFFFFF)：2.9~5.0:1。yellow 只有 2.9:1，是設計稿的值
+/// - 深色 `accentColor` 對深色 `Color.card`(#3A5A40)：4.1~6.5:1
 ///
 /// 深色模式的 accent 直接用填色本身，跟 `choresAccent` / `learningAccent` 的作法一致。
 extension HabitTagColor {
@@ -78,14 +73,12 @@ extension HabitTagColor {
 
     private var hexes: (fill: String, accentLight: String) {
         switch self {
-        case .rose:     return ("E39FAC", "A3495B")
-        case .coral:    return ("E6AD9C", "A35D48")
-        case .mint:     return ("92D1BA", "388568")
-        case .sky:      return ("A1C1E6", "4A72A1")
-        case .indigo:   return ("ACA6E0", "665EA8")
-        case .lavender: return ("D0AAE6", "895BA3")
-        case .plum:     return ("E0A6D2", "9E558C")
-        case .slate:    return ("C1CCDB", "65758C")
+        case .coral:  return ("F3C3B5", "A68379")
+        case .mint:   return ("9DDFC6", "388568")
+        case .sky:    return ("A3BDF5", "4A72A1")
+        case .indigo: return ("CDBFEF", "8D80AC")
+        case .yellow: return ("F5EDAE", "A39960")
+        case .slate:  return ("D6D6D7", "8A8A8C")
         }
     }
 }

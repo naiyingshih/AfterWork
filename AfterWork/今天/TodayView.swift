@@ -80,6 +80,7 @@ public struct TodayView: View {
                 .font(.system(size: 32, weight: .heavy))
                 .foregroundColor(Color.label)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     private var habitsSection: some View {
@@ -91,12 +92,8 @@ public struct TodayView: View {
                 
                 Spacer()
                 
-                Button(action: {
+                PillButton(title: "+ 新增") {
                     store.send(.addHabitButtonTapped)
-                }) {
-                    Text("新增")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(Color.main)
                 }
             }
             
@@ -131,33 +128,13 @@ public struct TodayView: View {
             Spacer()
             
             HStack(spacing: 12) {
-                Button(action: {
+                PillButton(title: "+ 建立") {
                     store.send(.addTaskButtonTapped)
-                }) {
-                    Text("+ 建立")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(Color.label)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.card)
-                        .cornerRadius(8)
-                        .shadow(color: .black.opacity(0.05), radius: 2)
                 }
-                .buttonStyle(.plain)
                 
-                Button(action: {
+                PillButton(title: "從目標拉取") {
                     store.send(.pullFromGoalsButtonTapped)
-                }) {
-                    Text("從目標拉取")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(Color.label)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.card)
-                        .cornerRadius(8)
-                        .shadow(color: .black.opacity(0.05), radius: 2)
                 }
-                .buttonStyle(.plain)
             }
         }
     }

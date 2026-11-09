@@ -58,6 +58,8 @@ struct GoalsView: View {
             .background(Color.background)
             .listStyle(.insetGrouped)
             .listSectionSpacing(12)
+            // FAB 疊在清單上，讓最後一張卡片能捲到 FAB 上方（FAB 56pt + 上下間距 16pt）。
+            .contentMargins(.bottom, 72, for: .scrollContent)
             .animation(.default, value: store.goals)
             .navigationTitle("目標")
             .alert($store.scope(state: \.alert, action: \.alert))
@@ -89,9 +91,9 @@ struct GoalsView: View {
                         }
                     
                     GoalFormView(store: formStore)
-                        .frame(maxHeight: 500)
+                        .frame(maxHeight: 420)
                         .background(Color.card)
-                        .cornerRadius(16)
+                        .cornerRadius(20)
                         .padding(24)
                         .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
                 }

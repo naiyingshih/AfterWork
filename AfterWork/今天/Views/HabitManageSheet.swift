@@ -32,6 +32,7 @@ public struct HabitManageSheet: View {
                             Text(type.rawValue).tag(type)
                         }
                     }
+                    .tint(Color.labelSecondary)
                     
                     if store.habit.type == .other {
                         tagColorRow
@@ -42,6 +43,7 @@ public struct HabitManageSheet: View {
                             Text(kind.rawValue).tag(kind)
                         }
                     }
+                    .tint(Color.labelSecondary)
                     
                     if store.repeatKind == .custom {
                         HStack {
@@ -66,6 +68,7 @@ public struct HabitManageSheet: View {
                     }
                     
                     Toggle("設定結束日期", isOn: $store.hasEndDate)
+                        .tint(Color.main)
                     
                     if store.hasEndDate {
                         DatePicker("結束日期", selection: $store.endDate, displayedComponents: .date)
@@ -116,8 +119,7 @@ public struct HabitManageSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("類型顏色")
             
-            // 色塊之間不給固定間距，改成各自平分整列寬度：
-            // 八個色塊在 iPhone SE 的表單寬度下固定間距會排不下。
+            // 色塊之間不給固定間距，改成各自平分整列寬度，寬窄螢幕都排得剛好。
             HStack(spacing: 0) {
                 ForEach(HabitTagColor.allCases, id: \.self) { color in
                     let isSelected = (store.habit.tagColor ?? .fallback) == color
@@ -148,7 +150,7 @@ public struct HabitManageSheet: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(color.rawValue)
+                    .accessibilityLabel(color.displayName)
                     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
                 }
             }

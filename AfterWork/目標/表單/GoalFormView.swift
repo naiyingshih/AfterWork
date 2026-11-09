@@ -88,6 +88,7 @@ struct GoalFormView: View {
                     Button(store.mode == .add ? "建立目標" : "儲存") {
                         store.send(.saveButtonTapped)
                     }
+                    .fontWeight(.bold)
                     .foregroundColor(Color.main)
                     .disabled(store.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
