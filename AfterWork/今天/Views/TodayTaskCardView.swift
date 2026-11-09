@@ -23,18 +23,20 @@ public struct TodayTaskCardView: View {
     public var body: some View {
         HStack(alignment: .center, spacing: 16) {
             Button(action: onToggle) {
-                Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundColor(isDone ? Color.main : Color.label.opacity(0.3))
+                CheckCircle(isDone: isDone, uncheckedColor: Color.label.opacity(0.3))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(title)
+            .accessibilityValue(isDone ? "已完成" : "未完成")
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.system(size: 16, weight: .bold))
+                    // 刪除線的粗細跟著字重走，沒有參數可調；完成時降字重讓線細一點。
+                    .font(.system(size: 16, weight: isDone ? .medium : .bold))
                     .foregroundColor(isDone ? Color.labelTertiary : Color.label)
-                    .strikethrough(isDone)
+                    .strikethrough(isDone, color: Color.labelTertiary)
+                    // 標題已經由左邊的勾選按鈕唸出，這裡藏起來避免 VoiceOver 連唸兩次。
+                    .accessibilityHidden(true)
                 
                 if let sourceGoalName = sourceGoalName {
                     HStack(spacing: 4) {

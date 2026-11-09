@@ -14,10 +14,9 @@ struct AchievementCardView: View {
     var body: some View {
         if let selectedDate = store.selectedDate {
             VStack(alignment: .leading, spacing: 16) {
-                Text("\(dateString(from: selectedDate)) 成就")
+                Text(dateString(from: selectedDate))
                     .font(.headline)
                     .foregroundColor(Color.labelSecondary)
-                    .padding(.bottom, 4)
                 
                 // Section 1: Tasks (TodayTask & GoalItem)
                 VStack(alignment: .leading, spacing: 12) {
@@ -25,7 +24,7 @@ struct AchievementCardView: View {
                     
                     HStack {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 8)
+                            Circle()
                                 .fill(Color.main.opacity(0.15))
                                 .frame(width: 36, height: 36)
                             Image(systemName: "checkmark.circle")
@@ -42,9 +41,11 @@ struct AchievementCardView: View {
                     if !dailyTasks.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(dailyTasks, id: \.id) { task in
-                                Text(task.title)
+                                Text(task.isDone ? "✓ \(task.title)" : task.title)
                                     .font(.subheadline)
                                     .foregroundColor(task.isDone ? Color.label : Color.labelTertiary)
+                                    .accessibilityLabel(task.title)
+                                    .accessibilityValue(task.isDone ? "已完成" : "未完成")
                             }
                         }
                         .padding(.top, 4)
@@ -57,7 +58,6 @@ struct AchievementCardView: View {
                 
                 Divider()
                     .overlay(Color.hairline)
-                    .padding(.vertical, 4)
                 
                 // Section 2: Habits
                 VStack(alignment: .leading, spacing: 12) {
@@ -65,7 +65,7 @@ struct AchievementCardView: View {
                     
                     HStack {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 8)
+                            Circle()
                                 .fill(Color.learningAccent.opacity(0.15))
                                 .frame(width: 36, height: 36)
                             Image(systemName: "flame")
@@ -86,8 +86,7 @@ struct AchievementCardView: View {
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
                                 .foregroundColor(Color.onFill)
-                                .background(habit.style.fillColor)
-                                .cornerRadius(8)
+                                .background(habit.style.fillColor, in: Capsule())
                         }
                     } else {
                         Text("無習慣紀錄")

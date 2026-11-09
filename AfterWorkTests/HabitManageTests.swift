@@ -186,7 +186,7 @@ struct HabitManageTests {
     
     @Test func 改回內建類型會清掉自訂顏色() async {
         let now = Self.now
-        let habit = Habit(id: "h1", title: "冥想", type: .other, tagColor: .plum,
+        let habit = Habit(id: "h1", title: "冥想", type: .other, tagColor: .yellow,
                           createdTime: now, updatedTime: now)
         
         let store = TestStore(initialState: HabitManageFeature.State(habit: habit, isEditing: true, now: now)) {
@@ -212,7 +212,7 @@ struct HabitManageTests {
         var state = CalendarFeature.State()
         state.$allHabits.withLock {
             $0 = [
-                Habit(id: "h1", title: "冥想", type: .other, tagColor: .plum,
+                Habit(id: "h1", title: "冥想", type: .other, tagColor: .yellow,
                       completedDates: [now], createdTime: now, updatedTime: now),
                 Habit(id: "h2", title: "寫日記", type: .other, tagColor: .mint,
                       completedDates: [now], createdTime: now, updatedTime: now),
@@ -223,11 +223,11 @@ struct HabitManageTests {
         }
         
         let day = Calendar.current.startOfDay(for: now)
-        #expect(state.habitStylesByDay[day] == [.custom(.plum), .custom(.mint)])
+        #expect(state.habitStylesByDay[day] == [.custom(.yellow), .custom(.mint)])
     }
     
     @Test func 圓點排序固定為內建類型在前自訂色在後() {
-        let styles: Set<HabitStyle> = [.custom(.slate), .type(.learning), .custom(.rose), .type(.health)]
-        #expect(styles.sorted() == [.type(.health), .type(.learning), .custom(.rose), .custom(.slate)])
+        let styles: Set<HabitStyle> = [.custom(.slate), .type(.learning), .custom(.coral), .type(.health)]
+        #expect(styles.sorted() == [.type(.health), .type(.learning), .custom(.coral), .custom(.slate)])
     }
 }

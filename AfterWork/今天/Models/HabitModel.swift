@@ -20,19 +20,30 @@ public enum HabitType: String, CaseIterable, Codable, Equatable, Sendable {
 ///
 /// 給固定色票而不是開放任意選色：填色上的文字一律是 `Color.onFill`，
 /// 放任選色很容易挑到跟它對比不足的顏色（太亮或太暗都會）。
-/// 這裡每個色都先驗過對比 —— 見 `Color+App.swift` 的色值表。
+/// 這裡每個填色對 `onFill` 都先驗過對比 —— 見 `Color+App.swift` 的色值表。
 public enum HabitTagColor: String, CaseIterable, Codable, Equatable, Sendable {
-    case rose = "玫瑰"
-    case coral = "珊瑚"
-    case mint = "薄荷"
-    case sky = "天藍"
-    case indigo = "靛藍"
-    case lavender = "薰衣草"
-    case plum = "梅紫"
-    case slate = "石板"
+    // rawValue 是寫進 Firestore 的值，明確寫出來，重新命名 case 時才不會無聲改掉存檔格式。
+    case coral = "coral"
+    case mint = "mint"
+    case sky = "sky"
+    case indigo = "indigo"
+    case yellow = "yellow"
+    case slate = "slate"
 
     /// 選了「其他」但還沒挑顏色時的預設值。中性色，不會跟內建三種類型撞色。
     public static let fallback: HabitTagColor = .slate
+
+    /// 給 VoiceOver 念的名稱。rawValue 是寫進 Firestore 的識別值，不拿來顯示。
+    public var displayName: String {
+        switch self {
+        case .coral: return "珊瑚"
+        case .mint: return "薄荷"
+        case .sky: return "天藍"
+        case .indigo: return "靛藍"
+        case .yellow: return "鵝黃"
+        case .slate: return "石板"
+        }
+    }
 }
 
 /// 一個習慣在畫面上的配色身份。

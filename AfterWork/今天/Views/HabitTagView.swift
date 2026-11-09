@@ -32,6 +32,10 @@ public struct HabitTagView: View {
             Text(title)
                 .font(.system(size: 15, weight: .bold))
                 .multilineTextAlignment(.center)
+                // 圓形越往上下越窄，超過兩行頭尾會被裁掉。
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, 10)
 
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
@@ -48,15 +52,15 @@ public struct HabitTagView: View {
         .frame(width: 90, height: 90)
         .background(isCompleted ? style.fillColor : Color.card)
         .foregroundColor(isCompleted ? Color.onFill : Color.label)
-        .cornerRadius(24)
+        .clipShape(Circle())
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
+            Circle()
                 .stroke(isCompleted ? .clear : Color.hairline, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.04), radius: 10, x: 0, y: 4)
         // 用手勢而不是 Button：長按手勢疊在 Button 上，放開手時連 Button 的短按都會一起觸發，
         // 變成「想編輯卻順手把習慣打勾」。兩個手勢直接掛在同一個 View 上才會互斥。
-        .contentShape(RoundedRectangle(cornerRadius: 24))
+        .contentShape(Circle())
         .onTapGesture {
             onTap()
         }

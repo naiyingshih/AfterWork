@@ -243,7 +243,7 @@ struct DayCellView: View {
             Text("\(calendar.component(.day, from: date))")
                 .font(.system(size: 16, weight: isSelected || isToday ? .bold : .regular))
                 .frame(width: 36, height: 36)
-                .background(isSelected ? Color.main : (isToday ? Color.hairline : Color.clear))
+                .background(isSelected ? Color.mainFill : (isToday ? Color.hairline : Color.clear))
                 .foregroundColor(isSelected ? Color.onMain : Color.label)
                 .clipShape(Circle())
             

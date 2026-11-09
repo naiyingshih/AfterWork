@@ -62,11 +62,13 @@ struct GoalCardView: View {
                 }
                 
                 if store.isExpanded && store.description?.isEmpty == false {
-                    Divider()
-                        .overlay(Color.hairline)
                     Text(store.description ?? "")
-                        .font(.subheadline)
-                        .foregroundColor(Color.labelSecondary)
+                        .font(.footnote)
+                        .foregroundColor(Color.onDescriptionBubble)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .background(Color.descriptionBubble)
+                        .cornerRadius(12)
                 }
             }
             .padding(.vertical, 4)
@@ -95,19 +97,23 @@ struct GoalCardView: View {
                             Button {
                                 store.send(.itemChecked(id: item.id, !item.isDone))
                             } label: {
-                                Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(item.isDone ? Color.main : Color.labelTertiary)
-                                    .imageScale(.large)
+                                CheckCircle(isDone: item.isDone, size: 22)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .accessibilityLabel(item.title)
+                            .accessibilityValue(item.isDone ? "已完成" : "未完成")
                             
                             Text(item.title)
                                 .strikethrough(item.isDone, color: Color.labelTertiary)
                                 .foregroundColor(item.isDone ? Color.labelTertiary : Color.label)
+                                // 標題已經由左邊的勾選按鈕唸出，這裡藏起來避免 VoiceOver 連唸兩次。
+                                .accessibilityHidden(true)
                             
                             Spacer()
                         }
                         .padding(.vertical, 4)
+                        // 分隔線從卡片內距開始畫，不跟著文字縮排。
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 if let index = store.details.index(id: item.id) {
@@ -125,7 +131,7 @@ struct GoalCardView: View {
                             } label: {
                                 Label("加入今天", systemImage: "calendar.badge.plus")
                             }
-                            .tint(Color.main)
+                            .tint(Color.mainFill)
                         }
                     }
                     .onMove { source, destination in
