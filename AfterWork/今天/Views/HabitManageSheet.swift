@@ -68,7 +68,7 @@ public struct HabitManageSheet: View {
                     }
                     
                     Toggle("設定結束日期", isOn: $store.hasEndDate)
-                        .tint(Color.main)
+                        .tint(Color.mainFill)
                     
                     if store.hasEndDate {
                         DatePicker("結束日期", selection: $store.endDate, displayedComponents: .date)

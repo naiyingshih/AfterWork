@@ -227,7 +227,7 @@ struct Goal {
 
 ### 顏色
 
-色票放在 `Assets.xcassets/Colors`，`Helper/Color+App.swift` 只補推導出來的語意色。`labelSecondary` / `labelTertiary` / `onFill` 是各自獨立的色票而非 opacity 疊出來的 —— 深色模式用 opacity 推導會讓次要文字掉到 2.3:1。NavigationBar 與 TabBar 是 UIKit 畫的，在 `AppDelegate.configureAppearance()` 統一設定。
+色票放在 `Assets.xcassets/Colors`，`Helper/Color+App.swift` 只補推導出來的語意色。`labelSecondary` / `labelTertiary` / `onFill` 是各自獨立的色票而非 opacity 疊出來的 —— 深色模式用 opacity 推導會讓次要文字掉到 2.3:1。`main` 在深色模式是文字用的淺綠，FAB、日曆選取日這類大面積填色要用 `Color.mainFill`（深色模式維持深綠），上面的字用 `Color.onMain`。NavigationBar 與 TabBar 是 UIKit 畫的，在 `AppDelegate.configureAppearance()` 統一設定。
 
 **習慣的配色身份是 `HabitStyle` 而不是 `HabitType`。** 內建三種類型由類型決定顏色（走 colorset），「其他」由使用者從 `HabitTagColor` 的六個固定色票挑一個；`Habit.style` 把兩者收斂成同一個型別（`.type` / `.custom`），`fillColor` / `accentColor` 都掛在 `HabitStyle` 上，畫面（習慣卡、成就 tag、日曆圓點）只認 style，不再 switch 類型。
 

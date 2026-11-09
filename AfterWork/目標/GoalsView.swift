@@ -74,7 +74,7 @@ struct GoalsView: View {
                     .font(.title2)
                     .foregroundColor(Color.onMain)
                     .frame(width: 56, height: 56)
-                    .background(Color.main)
+                    .background(Color.mainFill)
                     .clipShape(Circle())
                     .shadow(radius: 4)
             }

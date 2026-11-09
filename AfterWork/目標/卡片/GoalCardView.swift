@@ -64,10 +64,10 @@ struct GoalCardView: View {
                 if store.isExpanded && store.description?.isEmpty == false {
                     Text(store.description ?? "")
                         .font(.caption)
-                        .foregroundColor(Color.labelSecondary)
+                        .foregroundColor(Color.onDescriptionBubble)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
-                        .background(Color.onFill.opacity(0.15))
+                        .background(Color.descriptionBubble)
                         .cornerRadius(12)
                 }
             }
@@ -129,7 +129,7 @@ struct GoalCardView: View {
                             } label: {
                                 Label("加入今天", systemImage: "calendar.badge.plus")
                             }
-                            .tint(Color.main)
+                            .tint(Color.mainFill)
                         }
                     }
                     .onMove { source, destination in
