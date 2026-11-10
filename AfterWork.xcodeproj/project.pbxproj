@@ -6,6 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0E930377303C8EBC00F71B96 /* ARCHITECTURE.md in Resources */ = {isa = PBXBuildFile; fileRef = 0E930376303C8EBC00F71B96 /* ARCHITECTURE.md */; };
+		0EB723E52F6E70DD00DE00FE /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723E42F6E70DD00DE00FE /* FirebaseAnalytics */; };
+		0EB723E72F6E70DD00DE00FE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723E62F6E70DD00DE00FE /* FirebaseCore */; };
+		0EB723E92F6E70DD00DE00FE /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723E82F6E70DD00DE00FE /* FirebaseFirestore */; };
+		0EB723EB2F6E70DD00DE00FE /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723EA2F6E70DD00DE00FE /* FirebaseStorage */; };
+		0EB723F12F6E70DD00DE00FE /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0EB723F02F6E70DD00DE00FE /* FirebaseAuth */; };
+		0ED1AB6C2F24BF5300449576 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 0ED1AB6B2F24BF5300449576 /* ComposableArchitecture */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		0ED1AB4E2F24B5F100449576 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +34,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0E930376303C8EBC00F71B96 /* ARCHITECTURE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARCHITECTURE.md; sourceTree = "<group>"; };
 		0ED1AB3C2F24B5E900449576 /* AfterWork.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AfterWork.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ED1AB4D2F24B5F100449576 /* AfterWorkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AfterWorkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ED1AB572F24B5F100449576 /* AfterWorkUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AfterWorkUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -52,6 +63,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0EB723E52F6E70DD00DE00FE /* FirebaseAnalytics in Frameworks */,
+				0EB723F12F6E70DD00DE00FE /* FirebaseAuth in Frameworks */,
+				0EB723E92F6E70DD00DE00FE /* FirebaseFirestore in Frameworks */,
+				0EB723E72F6E70DD00DE00FE /* FirebaseCore in Frameworks */,
+				0EB723EB2F6E70DD00DE00FE /* FirebaseStorage in Frameworks */,
+				0ED1AB6C2F24BF5300449576 /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,12 +89,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0EB723E32F6E70DD00DE00FE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		0ED1AB332F24B5E900449576 = {
 			isa = PBXGroup;
 			children = (
+				0E930376303C8EBC00F71B96 /* ARCHITECTURE.md */,
 				0ED1AB3E2F24B5E900449576 /* AfterWork */,
 				0ED1AB502F24B5F100449576 /* AfterWorkTests */,
 				0ED1AB5A2F24B5F100449576 /* AfterWorkUITests */,
+				0EB723E32F6E70DD00DE00FE /* Frameworks */,
 				0ED1AB3D2F24B5E900449576 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -112,6 +138,12 @@
 			);
 			name = AfterWork;
 			packageProductDependencies = (
+				0ED1AB6B2F24BF5300449576 /* ComposableArchitecture */,
+				0EB723E42F6E70DD00DE00FE /* FirebaseAnalytics */,
+				0EB723E62F6E70DD00DE00FE /* FirebaseCore */,
+				0EB723F02F6E70DD00DE00FE /* FirebaseAuth */,
+				0EB723E82F6E70DD00DE00FE /* FirebaseFirestore */,
+				0EB723EA2F6E70DD00DE00FE /* FirebaseStorage */,
 			);
 			productName = AfterWork;
 			productReference = 0ED1AB3C2F24B5E900449576 /* AfterWork.app */;
@@ -195,6 +227,10 @@
 			);
 			mainGroup = 0ED1AB332F24B5E900449576;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0ED1AB6A2F24BF5300449576 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				0EB723E02F6E6F5100DE00FE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0ED1AB3D2F24B5E900449576 /* Products */;
 			projectDirPath = "";
@@ -212,6 +248,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E930377303C8EBC00F71B96 /* ARCHITECTURE.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,7 +443,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.7;
@@ -445,7 +482,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.7;
@@ -591,6 +628,58 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0EB723E02F6E6F5100DE00FE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.11.0;
+			};
+		};
+		0ED1AB6A2F24BF5300449576 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.23.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0EB723E42F6E70DD00DE00FE /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0EB723E02F6E6F5100DE00FE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		0EB723E62F6E70DD00DE00FE /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0EB723E02F6E6F5100DE00FE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		0EB723E82F6E70DD00DE00FE /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0EB723E02F6E6F5100DE00FE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		0EB723EA2F6E70DD00DE00FE /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0EB723E02F6E6F5100DE00FE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		0EB723F02F6E70DD00DE00FE /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0EB723E02F6E6F5100DE00FE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		0ED1AB6B2F24BF5300449576 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0ED1AB6A2F24BF5300449576 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0ED1AB342F24B5E900449576 /* Project object */;
 }

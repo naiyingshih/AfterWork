@@ -1,0 +1,185 @@
+//
+//  GoalCardView.swift
+//  AfterWork
+//
+//  Created by NY.
+//
+
+import ComposableArchitecture
+import SwiftUI
+
+struct GoalCardView: View {
+    
+    @Bindable var store: StoreOf<GoalFeature>
+    
+    var body: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(store.title)
+                        .font(.headline)
+                        .foregroundColor(Color.label)
+                    
+                    Spacer()
+                    
+                    Button {
+                        store.send(.toggleExpanded)
+                    } label: {
+                        Image(systemName: store.isExpanded ? "chevron.up" : "chevron.down")
+                            .foregroundColor(Color.labelSecondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                HStack(spacing: 8) {
+                    // 自繪進度條：ProgressView 的底軌是系統色，無法換成色票
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.hairline)
+                            Capsule()
+                                .fill(Color.main)
+                                .frame(width: geo.size.width * store.progress)
+                        }
+                    }
+                    .frame(height: 5)
+                    Text("\(Int(round(store.progress * 100)))%")
+                        .font(.subheadline)
+                        .foregroundColor(Color.labelSecondary)
+                }
+                
+                HStack {
+                    if let date = store.finishDate {
+                        Text("完成日：\(DateFormatter.yyyyMMdd.string(from: date))")
+                            .font(.caption)
+                            .foregroundColor(Color.labelSecondary)
+                    }
+                    Spacer()
+                    if let date = store.targetDate {
+                        Text("預計完成日：\(DateFormatter.yyyyMMdd.string(from: date))")
+                            .font(.caption)
+                            .foregroundColor(Color.labelSecondary)
+                    }
+                }
+                
+                if store.isExpanded && store.description?.isEmpty == false {
+                    Text(store.description ?? "")
+                        .font(.footnote)
+                        .foregroundColor(Color.onDescriptionBubble)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .background(Color.descriptionBubble)
+                        .cornerRadius(12)
+                }
+            }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+            .contextMenu {
+                Button {
+                    store.send(.editGoalTapped)
+                } label: {
+                    Label("編輯", systemImage: "pencil")
+                }
+                
+                Button(role: .destructive) {
+                    store.send(.deleteGoalTapped)
+                } label: {
+                    Label("刪除", systemImage: "trash")
+                }
+            }
+            
+            if store.isExpanded {
+                if !store.details.isEmpty {
+                    ForEach(store.details) { item in
+                        HStack {
+                            Button {
+                                store.send(.itemChecked(id: item.id, !item.isDone))
+                            } label: {
+                                CheckCircle(isDone: item.isDone, size: 22)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .accessibilityLabel(item.title)
+                            .accessibilityValue(item.isDone ? "已完成" : "未完成")
+                            
+                            Text(item.title)
+                                .strikethrough(item.isDone, color: Color.labelTertiary)
+                                .foregroundColor(item.isDone ? Color.labelTertiary : Color.label)
+                                // 標題已經由左邊的勾選按鈕唸出，這裡藏起來避免 VoiceOver 連唸兩次。
+                                .accessibilityHidden(true)
+                            
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                        // 分隔線從卡片內距開始畫，不跟著文字縮排。
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                if let index = store.details.index(id: item.id) {
+                                    store.send(.deleteItem(IndexSet(integer: index)))
+                                }
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .accessibilityLabel("刪除")
+                            .tint(Color.destructive)
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                store.send(.addToToday(id: item.id))
+                            } label: {
+                                Label("加入今天", systemImage: "calendar.badge.plus")
+                            }
+                            .tint(Color.mainFill)
+                        }
+                    }
+                    .onMove { source, destination in
+                        store.send(.moveItems(source, destination))
+                    }
+                }
+                
+                if store.local.isAddingItem {
+                    HStack {
+                        TextField(
+                            "輸入細項",
+                            text: Binding(
+                                get: { store.local.newItemTitle },
+                                set: { store.send(.newItemTitleChanged($0)) }
+                            )
+                        )
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .onSubmit {
+                            store.send(.saveItemButtonTapped)
+                        }
+                        
+                        Button("取消") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            store.send(.cancelItemButtonTapped)
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(Color.labelSecondary)
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Button("儲存") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            store.send(.saveItemButtonTapped)
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(Color.main)
+                        .disabled(store.local.newItemTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .padding(.vertical, 4)
+                } else {
+                    Button {
+                        store.send(.addItemButtonTapped)
+                    } label: {
+                        Label("新增細項", systemImage: "plus")
+                            .foregroundColor(Color.main)
+                    }
+                }
+            }
+        }
+    }
+}
